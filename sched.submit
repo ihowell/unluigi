@@ -1,0 +1,10 @@
+universe = local
+executable = run_sched.sh
+output = logs/sched.out
+error = logs/sched.err
+log = logs/sched.log
+PeriodicRelease = ((CurrentTime - EnteredCurrentStatus) > 60)
+
+arguments = "/work/choueiry/ihowell/results/CP2019/config.json --backup=/home/choueiry/aschneid/.netrc"
+
+queue 1

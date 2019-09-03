@@ -1,0 +1,7 @@
+{
+    "platform": "zebra",
+    "max_running_jobs": 16,
+    "local_scheduler": false,
+    "blackhole_path": "/home/ihowell/blackhole/build/BlackholeApp",
+    "stardust_root": "/mnt/hdd/ihowell/stampede/aaai-2020"
+}
