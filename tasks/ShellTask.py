@@ -21,11 +21,11 @@ class ShellTask(slurm.SlurmTask):
 
         preamble = None
         if self.config['platform'] == "crane":
-            with open("%s/crane_premable.sh" % self_path,
+            with open("%s/crane_preamble.sh" % self_path,
                       'r') as preamble_file:
                 preamble = preamble_file.read()
         elif self.config['platform'] == "zebra":
-            with open("%s/zebra_premable.sh" % self_path,
+            with open("%s/zebra_preamble.sh" % self_path,
                       'r') as preamble_file:
                 preamble = preamble_file.read()
 
