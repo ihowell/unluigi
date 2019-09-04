@@ -47,7 +47,7 @@ class ShellTask(slurm.SlurmTask):
         command_file_path = None
         with tempfile.NamedTemporaryFile(
                 'w',
-                prefix=self.config['tmp_path'],
+                prefix="%s/" % self.config['tmp_path'],
                 suffix=".sh",
                 delete=not self.config['keep_tmp_files']) as command_file:
             if preamble is not None:
