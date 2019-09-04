@@ -4,5 +4,7 @@
     "local_scheduler": true,
     "blackhole_app": "/Users/ihowell/Projects/blackhole/build/BlackholeApp",
     "stardust_path": "/Users/ihowell/Data/luigi_test_stardust/",
-    "tmp_path": "/Users/ihowell/tmp/"
+    "log_path": "/Users/ihowell/Data/luigi_test_blackhole/log",
+    "tmp_path": "/Users/ihowell/Data/luigi_test_blackhole/tmp/",
+    "keep_tmp_files": false
 }

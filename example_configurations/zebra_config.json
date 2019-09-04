@@ -4,5 +4,7 @@
     "local_scheduler": false,
     "blackhole_app": "/home/ihowell/blackhole/build/BlackholeApp",
     "stardust_path": "/mnt/hdd/ihowell/stampede/aaai-2020/",
-    "tmp_path": "/mnt/hdd/ihowell/tmp"
+    "log_path": "/mnt/hdd/ihowell/blackhole/aaai-2020/log",
+    "tmp_path": "/mnt/hdd/ihowell/tmp",
+    "keep_tmp_files": false
 }

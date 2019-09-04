@@ -44,8 +44,6 @@ class ArchiveDirectory(slurm.SlurmTask):
     compression = luigi.Parameter(default="xz")
 
     def output(self):
-        print("Output")
-        print(self.output_tar)
         return tar_target.TarTarget(self.output_tar)
 
     def run(self):

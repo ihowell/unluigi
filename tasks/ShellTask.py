@@ -46,10 +46,11 @@ class ShellTask(slurm.SlurmTask):
                                           perfstat_cmd, command)
 
         command_file_path = None
-        with tempfile.NamedTemporaryFile('w',
-                                         prefix=self.config['tmp_path'],
-                                         suffix=".sh",
-                                         delete=False) as command_file:
+        with tempfile.NamedTemporaryFile(
+                'w',
+                prefix=self.config['tmp_path'],
+                suffix=".sh",
+                delete=not self.config['keep_tmp_files']) as command_file:
             if preamble is not None:
                 command_file.write(preamble)
                 command_file.write('\n')
@@ -57,5 +58,5 @@ class ShellTask(slurm.SlurmTask):
             command_file.write(formatted_command)
             command_file.flush()
             execute_command = "bash %s" % command_file.name
-        return_values = self.ex(execute_command)
+            return_values = self.ex(execute_command)
         return return_values
