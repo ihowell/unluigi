@@ -25,6 +25,10 @@ class ShellTask(slurm.SlurmTask):
             with open("%s/crane_premable.sh" % self_path,
                       'r') as preamble_file:
                 preamble = preamble_file.read()
+        elif platform == "zebra":
+            with open("%s/zebra_premable.sh" % self_path,
+                      'r') as preamble_file:
+                preamble = preamble_file.read()
 
         memlimit_cmd = ""
         if memory_limit is not None:
