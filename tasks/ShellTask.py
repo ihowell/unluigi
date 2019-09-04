@@ -12,8 +12,7 @@ class ShellTask(slurm.SlurmTask):
                     command,
                     memory_limit=None,
                     time_limit=None,
-                    perf_file=None,
-                    platform="local"):
+                    perf_file=None):
         """Generate a bash script and run the script"""
         if isinstance(self.config, str):
             self.config = json.loads(self.config)
@@ -21,11 +20,11 @@ class ShellTask(slurm.SlurmTask):
         self_path = os.path.dirname(os.path.abspath(__file__))
 
         preamble = None
-        if platform == "crane":
+        if self.config['platform'] == "crane":
             with open("%s/crane_premable.sh" % self_path,
                       'r') as preamble_file:
                 preamble = preamble_file.read()
-        elif platform == "zebra":
+        elif self.config['platform'] == "zebra":
             with open("%s/zebra_premable.sh" % self_path,
                       'r') as preamble_file:
                 preamble = preamble_file.read()
