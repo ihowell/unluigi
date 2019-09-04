@@ -5,7 +5,7 @@ from tasks.ShellTask import ShellTask
 
 
 class CheckpointDatabase(ShellTask):
-    blackhole_path = luigi.Parameter()
+    blackhole_app = luigi.Parameter()
     database_path = luigi.Parameter()
 
     def output(self):
@@ -14,7 +14,7 @@ class CheckpointDatabase(ShellTask):
 
     def run(self):
 
-        command = "%s -c crane_checkpoint { -d %s }" % (self.blackhole_path,
+        command = "%s -c crane_checkpoint { -d %s }" % (self.blackhole_app,
                                                         self.database_path)
         (returncode, stdout, stderr) = self.run_command(command)
 
@@ -29,6 +29,10 @@ class CheckpointDatabase(ShellTask):
         with open("%s/checkpoint.err" % base_path, 'w') as out_file:
             out_file.write(stderr.decode("utf-8"))
 
-        if returncode == 0:
-            with self.output().open('w') as out_file:
-                out_file.write("1")
+        if returncode > 0:
+            raise Exception(
+                "Received error code %s in CheckpointDatabase: %s" %
+                (returncode, self.database_path))
+
+        with self.output().open('w') as out_file:
+            out_file.write("1")

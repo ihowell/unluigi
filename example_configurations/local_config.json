@@ -3,5 +3,6 @@
     "max_running_jobs": 4,
     "local_scheduler": true,
     "blackhole_app": "/Users/ihowell/Projects/blackhole/build/BlackholeApp",
-    "stardust_path": "/Users/ihowell/Data/luigi_test_stardust/"
+    "stardust_path": "/Users/ihowell/Data/luigi_test_stardust/",
+    "tmp_path": "/Users/ihowell/tmp/"
 }

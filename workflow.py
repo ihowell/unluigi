@@ -22,11 +22,12 @@ class Workflow(luigi.WrapperTask):
             config = json.load(read_config)
             config['blackhole_path'] = os.path.dirname(self.config_path)
             self.config = config
+            print(self.config)
 
     def requires(self):
         slurminfo = slurm.SlurmInfo(slurm.RUNMODE_LOCAL, "Luigi Setup",
                                     "batch", 1, 0, "Luigi Workflow Test", 1)
-        if not self.local:
+        if self.local == "crane":
             slurminfo = slurm.SlurmInfo(slurm.RUNMODE_HPC, "Luigi Setup",
                                         "batch", 1, 0, "Luigi Workflow Test",
                                         1)
@@ -37,13 +38,17 @@ class Workflow(luigi.WrapperTask):
                                       self.benchmark, self.instance)
         blackhole_app = self.config['blackhole_app']
 
+        config_txt = json.dumps(self.config)
         tasks = [
-            ParseStardustFile(slurminfo, blackhole_app, stardust_path,
+            ParseStardustFile(slurminfo, config_txt, blackhole_app,
+                              stardust_path, blackhole_path),
+            CheckpointDatabase(slurminfo, config_txt, blackhole_app,
+                               blackhole_path),
+            GenerateHistories(slurminfo, config_txt, blackhole_app,
                               blackhole_path),
-            CheckpointDatabase(slurminfo, blackhole_app, blackhole_path),
-            GenerateHistories(slurminfo, blackhole_app, blackhole_path),
             ArchiveDirectory(slurminfo, blackhole_path,
-                             "%s.tar.xz" % blackhole_path)
+                             "%s.tar.xz" % blackhole_path,
+                             self.config['blackhole_path'])
         ]
 
         return util.sequence_tasks(tasks)

@@ -40,11 +40,17 @@ class atomic_file_pointer():
 class ArchiveDirectory(slurm.SlurmTask):
     directory_path = luigi.Parameter()
     output_tar = luigi.Parameter()
+    relative_tar_path = luigi.Parameter()
     compression = luigi.Parameter(default="xz")
 
     def output(self):
+        print("Output")
+        print(self.output_tar)
         return tar_target.TarTarget(self.output_tar)
 
     def run(self):
         with atomic_file_pointer(self.output_tar).open() as tar_file:
-            self.ex("tar cJf %s %s" % (tar_file.tmp_path, self.directory_path))
+            self.ex(
+                "tar cJf %s -C %s/ %s" %
+                (tar_file.tmp_path, self.relative_tar_path,
+                 os.path.relpath(self.directory_path, self.relative_tar_path)))

@@ -2,9 +2,12 @@ import luigi
 import slurm
 import os
 import tempfile
+import json
 
 
 class ShellTask(slurm.SlurmTask):
+    config = luigi.Parameter()
+
     def run_command(self,
                     command,
                     memory_limit=None,
@@ -12,6 +15,9 @@ class ShellTask(slurm.SlurmTask):
                     perf_file=None,
                     platform="local"):
         """Generate a bash script and run the script"""
+        if isinstance(self.config, str):
+            self.config = json.loads(self.config)
+
         self_path = os.path.dirname(os.path.abspath(__file__))
 
         preamble = None
@@ -36,12 +42,16 @@ class ShellTask(slurm.SlurmTask):
                                           perfstat_cmd, command)
 
         command_file_path = None
-        with tempfile.NamedTemporaryFile('w', delete=False) as command_file:
+        with tempfile.NamedTemporaryFile('w',
+                                         prefix=self.config['tmp_path'],
+                                         suffix=".sh",
+                                         delete=False) as command_file:
             if preamble is not None:
                 command_file.write(preamble)
                 command_file.write('\n')
-            command_file.write(formatted_command)
-            command_file_path = command_file.name
 
-        execute_command = "bash %s" % command_file_path
-        return self.ex(execute_command)
+            command_file.write(formatted_command)
+            command_file.flush()
+            execute_command = "bash %s" % command_file.name
+        return_values = self.ex(execute_command)
+        return return_values

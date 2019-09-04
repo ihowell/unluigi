@@ -3,5 +3,6 @@
     "max_running_jobs": 16,
     "local_scheduler": false,
     "blackhole_app": "/home/ihowell/blackhole/build/BlackholeApp",
-    "stardust_path": "/mnt/hdd/ihowell/stampede/aaai-2020/"
+    "stardust_path": "/mnt/hdd/ihowell/stampede/aaai-2020/",
+    "tmp_path": "/mnt/hdd/ihowell/tmp"
 }

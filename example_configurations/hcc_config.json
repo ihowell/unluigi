@@ -1,7 +1,8 @@
 {
-    "platform": "zebra",
-    "max_running_jobs": 16,
+    "platform": "crane",
+    "max_running_jobs": 900,
     "local_scheduler": false,
-    "blackhole_path": "/home/ihowell/blackhole/build/BlackholeApp",
-    "stardust_root": "/mnt/hdd/ihowell/stampede/aaai-2020"
+    "blackhole_path": "/work/choueiry/ihowell/binaries/BlackholeApp",
+    "stardust_root": "/work/choueiry/ihowell/stampede/aaai-2020",
+    "tmp_path": "/work/choueiry/ihowell/tmp"
 }

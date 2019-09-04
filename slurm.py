@@ -157,18 +157,18 @@ class SlurmHelpers():
         stdout, stderr = proc.communicate()
         retcode = proc.returncode
 
-        if len(stderr) > 0:
-            log.debug('Stderr from command: %s', stderr)
+        # if len(stderr) > 0:
+        #     log.debug('Stderr from command: %s', stderr)
 
-        if retcode != 0:
-            errmsg = ('Command failed (retcode {ret}): {cmd}\n'
-                      'Command output: {out}\n'
-                      'Command stderr: {err}').format(ret=retcode,
-                                                      cmd=command,
-                                                      out=stdout,
-                                                      err=stderr)
-            log.error(errmsg)
-            raise Exception(errmsg)
+        # if retcode != 0:
+        #     errmsg = ('Command failed (retcode {ret}): {cmd}\n'
+        #               'Command output: {out}\n'
+        #               'Command stderr: {err}').format(ret=retcode,
+        #                                               cmd=command,
+        #                                               out=stdout,
+        #                                               err=stderr)
+        #     log.error(errmsg)
+        #     raise Exception(errmsg)
 
         return (retcode, stdout, stderr)
 

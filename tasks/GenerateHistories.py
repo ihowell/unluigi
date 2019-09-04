@@ -5,7 +5,7 @@ from tasks.ShellTask import ShellTask
 
 
 class GenerateHistories(ShellTask):
-    blackhole_path = luigi.Parameter()
+    blackhole_app = luigi.Parameter()
     database_path = luigi.Parameter()
 
     def output(self):
@@ -14,7 +14,7 @@ class GenerateHistories(ShellTask):
 
     def run(self):
         command = "%s -c crane_all_histories { -d %s -s 32 }" % (
-            self.blackhole_path, self.database_path)
+            self.blackhole_app, self.database_path)
         (returncode, stdout, stderr) = self.run_command(command)
 
         base_path = "%s_tasks" % self.database_path
@@ -28,6 +28,9 @@ class GenerateHistories(ShellTask):
         with open("%s/histories.err" % base_path, 'w') as out_file:
             out_file.write(stderr.decode("utf-8"))
 
-        if returncode == 0:
-            with self.output().open('w') as out_file:
-                out_file.write("1")
+        if returncode > 0:
+            raise Exception("Received error code %s in ParseStardustFile: %s" %
+                            (returncode, self.database_path))
+
+        with self.output().open('w') as out_file:
+            out_file.write("1")
