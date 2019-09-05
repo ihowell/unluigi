@@ -14,6 +14,7 @@ if [ -e /util/opt/lmod/lmod/init/profile ]; then
     fi
     MODULEPATH=`/util/opt/lmod/lmod/libexec/addto  --append MODULEPATH /util/opt/hcc-modules/Common`
     export LMOD_AVAIL_STYLE="system:<en_grouped>"
-    module load python/3.7
+    module load compiler/gcc/8.2
+    module load boost/1.69
     module list
 fi
