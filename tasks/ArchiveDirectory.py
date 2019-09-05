@@ -44,7 +44,7 @@ class ArchiveDirectory(slurm.SlurmTask):
     compression = luigi.Parameter(default="xz")
 
     def __init__(self, *args, **kwargs):
-        super(ParseStardustFile, self).__init__(*args, **kwargs)
+        super(ArchiveDirectory, self).__init__(*args, **kwargs)
         self.instance_name = "ArchiveDirectory_%s" % self.directory_path
 
     def output(self):
