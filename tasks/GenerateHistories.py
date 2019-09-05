@@ -8,6 +8,10 @@ class GenerateHistories(ShellTask):
     blackhole_app = luigi.Parameter()
     database_path = luigi.Parameter()
 
+    def __init__(self, *args, **kwargs):
+        super(GenerateHistories, self).__init__(*args, **kwargs)
+        self.instance_name = "GenerateHistories_%s" % self.database_path
+
     def output(self):
         return luigi.LocalTarget("%s_tasks/histories.success" %
                                  self.database_path)

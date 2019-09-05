@@ -10,6 +10,10 @@ class ParseStardustFile(ShellTask):
     stardust_instance = luigi.Parameter()
     blackhole_path = luigi.Parameter()
 
+    def __init__(self, *args, **kwargs):
+        super(ParseStardustFile, self).__init__(*args, **kwargs)
+        self.instance_name = "ParseStardustFile_%s" % self.stardust_instance
+
     def output(self):
         return luigi.LocalTarget("%s_tasks/parse.success" %
                                  self.blackhole_path)
