@@ -15,11 +15,12 @@ if [ -e /util/opt/lmod/lmod/init/profile ]; then
     fi
     MODULEPATH=`/util/opt/lmod/lmod/libexec/addto  --append MODULEPATH /util/opt/hcc-modules/Common`
     export LMOD_AVAIL_STYLE="system:<en_grouped>"
-#    module load python/3.7
+    module load python/3.7
     module list
 fi
 
 # Install any missing requirements for python
 pip install --user -r requirements.txt
+export PATH="$PATH:/home/choueiry/ihowell/.local/bin"
 
 python3 ./sched.py $@

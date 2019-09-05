@@ -11,7 +11,6 @@ import util
 
 
 class Workflow(luigi.WrapperTask):
-    local = luigi.BoolParameter(default=True)
     config_path = luigi.Parameter()
     benchmark = luigi.Parameter()
     instance = luigi.Parameter()
@@ -25,11 +24,11 @@ class Workflow(luigi.WrapperTask):
             print(self.config)
 
     def requires(self):
-        slurminfo = slurm.SlurmInfo(slurm.RUNMODE_LOCAL, "Luigi Setup",
-                                    "batch", 1, 0, "Luigi Workflow Test", 1)
-        if self.local == "crane":
-            slurminfo = slurm.SlurmInfo(slurm.RUNMODE_HPC, "Luigi Setup",
-                                        "batch", 1, 0, "Luigi Workflow Test",
+        slurminfo = slurm.SlurmInfo(slurm.RUNMODE_LOCAL, "LuigiSetup",
+                                    "batch", 1, 0, "Luigi_Workflow_Test", 1)
+        if self.config['platform'] == "crane":
+            slurminfo = slurm.SlurmInfo(slurm.RUNMODE_HPC, "choueiry",
+                                        "batch", 1, None, "Luigi_Workflow_Test",
                                         1)
 
         stardust_path = os.path.join(self.config['stardust_path'],
@@ -82,8 +81,7 @@ class CreateWorkflows(luigi.WrapperTask):
                     task_specs.append((benchmark, instance))
 
         return [
-            Workflow(local=True,
-                     config_path=self.config_path,
+            Workflow(config_path=self.config_path,
                      benchmark=benchmark,
                      instance=instance) for (benchmark, instance) in task_specs
         ]

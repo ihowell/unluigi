@@ -5,6 +5,6 @@ error = logs/sched.err
 log = logs/sched.log
 PeriodicRelease = ((CurrentTime - EnteredCurrentStatus) > 60)
 
-arguments = "workflow.py /work/choueiry/ihowell/blackhole/aaai-2020/config.json"
+arguments = "workflow.py /work/choueiry/ihowell/blackhole/nonogram/hcc_config.json"
 
 queue 1

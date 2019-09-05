@@ -62,7 +62,7 @@ class SlurmInfo():
                    'cores: {c}, '
                    'threads: {thr}, '
                    'jobname: {j}, '
-                   'project: {pr})').format(t=self.time,
+                   'project: {pr})').format(t=str(self.time),
                                             pt=self.partition,
                                             c=self.cores,
                                             thr=self.threads,
@@ -75,13 +75,21 @@ class SlurmInfo():
         Return a formatted string with arguments and option flags to SLURM
         commands such as salloc and sbatch, for non-MPI, HPC jobs.
         '''
-        argstr = ' -A {pr} -p {pt} -n {c} -t {t} -J {j} srun -n 1 -c {thr} '.format(
-            pr=self.project,
-            pt=self.partition,
-            c=self.cores,
-            t=self.time,
-            j=self.jobname,
-            thr=self.threads)
+        if self.time is not None:
+            argstr = ' -A {pr} -p {pt} -n {c} -t {t} -J {j} srun -n 1 -c {thr} '.format(
+                pr=self.project,
+                pt=self.partition,
+                c=self.cores,
+                t=self.time,
+                j=self.jobname,
+                thr=self.threads)
+        else:
+            argstr = ' -A {pr} -p {pt} -n {c} -J {j} srun -n 1 -c {thr} '.format(
+                pr=self.project,
+                pt=self.partition,
+                c=self.cores,
+                j=self.jobname,
+                thr=self.threads)
         return argstr
 
     def get_argstr_mpi(self):
@@ -152,7 +160,6 @@ class SlurmHelpers():
         if isinstance(command, list):
             command = sub.list2cmdline(command)
 
-        log.info('Executing command: ' + str(command))
         proc = sub.Popen(command, shell=True, stdout=sub.PIPE, stderr=sub.PIPE)
         stdout, stderr = proc.communicate()
         retcode = proc.returncode
@@ -181,6 +188,7 @@ class SlurmHelpers():
 
         fullcommand = 'salloc %s %s' % (self.slurminfo.get_argstr_hpc(),
                                         command)
+        print("Full hpc command: %s" % fullcommand)
         (retcode, stdout, stderr) = self.ex_local(fullcommand)
 
         self.log_slurm_info(stderr)
