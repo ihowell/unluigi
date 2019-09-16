@@ -1,10 +1,6 @@
 {
-    "platform": "zebra",
-    "max_running_jobs": 16,
-    "local_scheduler": false,
-    "blackhole_app": "/home/ihowell/blackhole/build/BlackholeApp",
-    "stardust_path": "/mnt/hdd/ihowell/stampede/aaai-2020/",
-    "log_dir": "/mnt/hdd/ihowell/blackhole/aaai-2020/log",
-    "tmp_path": "/mnt/hdd/ihowell/tmp/",
-    "keep_tmp_files": false
+    "platform": "local",
+    "keep_tmp_files": false,
+    "local_scheduler": true,
+    "max_running_jobs": 3
 }

@@ -24,10 +24,6 @@ class ShellTask(slurm.SlurmTask):
             with open("%s/crane_preamble.sh" % self_path,
                       'r') as preamble_file:
                 preamble = preamble_file.read()
-        elif self.config['platform'] == "zebra":
-            with open("%s/zebra_preamble.sh" % self_path,
-                      'r') as preamble_file:
-                preamble = preamble_file.read()
 
         memlimit_cmd = ""
         if memory_limit is not None:
@@ -44,10 +40,13 @@ class ShellTask(slurm.SlurmTask):
         formatted_command = "%s%s%s%s" % (memlimit_cmd, timelimit_cmd,
                                           perfstat_cmd, command)
 
-        command_file_path = None
+        prefix = None
+        if 'tmp_path' in self.config:
+            '%s/' % self.config['tmp_path']
+
         with tempfile.NamedTemporaryFile(
                 'w',
-                prefix="%s/" % self.config['tmp_path'],
+                prefix=prefix,
                 suffix=".sh",
                 delete=not self.config['keep_tmp_files']) as command_file:
             if preamble is not None:

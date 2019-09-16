@@ -1,7 +1,7 @@
 import luigi
 import slurm
 import os
-import tar_target
+from targets.ArchiveTarget import ArchiveTarget
 import random
 
 
@@ -48,7 +48,7 @@ class ArchiveDirectory(slurm.SlurmTask):
         self.instance_name = "ArchiveDirectory_%s" % self.directory_path
 
     def output(self):
-        return tar_target.TarTarget(self.output_tar)
+        return ArchiveTarget(self.output_tar)
 
     def run(self):
         with atomic_file_pointer(self.output_tar).open() as tar_file:

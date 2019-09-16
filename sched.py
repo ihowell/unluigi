@@ -30,8 +30,9 @@ def main():
     workflow = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(workflow)
 
-    if not os.path.exists(config['tmp_path']):
-        os.makedirs(config['tmp_path'])
+    if 'tmp_path' in config:
+        if not os.path.exists(config['tmp_path']):
+            os.makedirs(config['tmp_path'])
 
     if not config['local_scheduler']:
         if not os.path.exists(config['log_dir']):

@@ -67,7 +67,7 @@ class atomic_archive(tarfile.TarFile):
         return super(atomic_archive, self).__exit__(exc_type, exc, traceback)
 
 
-class TarTarget(luigi.local_target.FileSystemTarget):
+class ArchiveTarget(luigi.local_target.FileSystemTarget):
     fs = luigi.local_target.LocalFileSystem()
 
     def __init__(self, path=None, is_tmp=False):
@@ -77,7 +77,7 @@ class TarTarget(luigi.local_target.FileSystemTarget):
             path = os.path.join(
                 tempfile.gettempdir(),
                 'luigi-tmp-%09d' % random.randint(0, 999999999))
-        super(TarTarget, self).__init__(path)
+        super(ArchiveTarget, self).__init__(path)
         self.is_tmp = is_tmp
 
     def makedirs(self):

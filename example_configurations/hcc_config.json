@@ -1,10 +1,11 @@
 {
     "platform": "crane",
-    "max_running_jobs": 900,
+    "crane": {
+        "account": "advisor_account",
+        "partition": "batch"
+    },
+    "max_running_jobs": 5,
     "local_scheduler": false,
-    "blackhole_path": "/work/choueiry/ihowell/binaries/BlackholeApp",
-    "stardust_path": "/work/choueiry/ihowell/stampede/aaai-2020",
-    "log_dir": "/work/choueiry/ihowell/blackhole/aaai-2020/log",
-    "tmp_path": "/work/choueiry/ihowell/tmp/"
+    "tmp_path": "/work/{advisor}/{user_name}/tmp/"
     "keep_tmp_files": false
 }
