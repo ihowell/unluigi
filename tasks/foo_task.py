@@ -1,7 +1,7 @@
 import luigi
-from util.AtomicFilePointer import AtomicFilePointer
+from util.atomic_file_pointer import AtomicFilePointer
 import os
-from tasks.ShellTask import ShellTask
+from tasks.shell_task import ShellTask
 
 
 class FooTask(ShellTask):

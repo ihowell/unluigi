@@ -3,6 +3,7 @@
 **.egg-info/
 .idea/
 .Python
+env
 
 # Save files
 *~
@@ -10,3 +11,6 @@
 
 # Don't want to save luigi logs
 log/
+
+# Visual Studio Code
+.vscode

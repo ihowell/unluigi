@@ -2,8 +2,8 @@ import luigi
 import slurm
 import json
 import os
-from tasks.FooTask import FooTask
-from tasks.BarTask import BarTask
+from tasks.foo_task import FooTask
+from tasks.bar_task import BarTask
 import util
 
 
