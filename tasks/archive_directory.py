@@ -1,7 +1,7 @@
 import luigi
 import slurm
 import os
-from targets.ArchiveTarget import ArchiveTarget
+from targets.archive_target import ArchiveTarget
 import random
 
 
