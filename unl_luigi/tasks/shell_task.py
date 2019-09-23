@@ -5,10 +5,10 @@ import tempfile
 
 
 class ShellTask(slurm.SlurmTask):
-    platform = luigi.Parameter()
+    platform = luigi.Parameter(default='crane')
     # TODO: tmp_path needs a clearer name
-    tmp_path = luigi.Parameter()
-    keep_tmp_files = luigi.BoolParameter()
+    tmp_path = luigi.Parameter(default='./')
+    keep_tmp_files = luigi.BoolParameter(default=False)
 
     def run_command(self,
                     command,
