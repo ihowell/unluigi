@@ -5,6 +5,7 @@ import tempfile
 
 
 class ShellTask(slurm.SlurmTask):
+    preamble_path = luigi.Parameter()
     platform = luigi.Parameter(default='crane')
     # TODO: tmp_path needs a clearer name
     tmp_path = luigi.Parameter(default='./')
@@ -16,12 +17,9 @@ class ShellTask(slurm.SlurmTask):
                     time_limit=None,
                     perf_file=None):
         """Generate a bash script and run the script"""
-        self_path = os.path.dirname(os.path.abspath(__file__))
-
         preamble = None
         if self.platform == "crane":
-            with open("%s/crane_preamble.sh" % self_path,
-                      'r') as preamble_file:
+            with open(self.preamble_path, 'r') as preamble_file:
                 preamble = preamble_file.read()
 
         memlimit_cmd = ""

@@ -18,7 +18,7 @@ class TrainTask(ShellTask):
 
     def run(self):
         cmd_str = 'OPENAI_LOGDIR="./openai_log/${SLURM_JOBID}" python -m baselines.run'
-        cmd_str += ' --env ' + str(self.env)
+        cmd_str += ' --env ' + str(self.env) + "NoFrameskip-v4"
         if self.env_type == 'atari':
             cmd_str += ' --alg deepq'
             cmd_str += ' --num_timesteps 1e7'
