@@ -40,8 +40,8 @@ def main():
         proc = Popen(["luigid", "--logdir", config['log_dir']])
         time.sleep(1)
 
-    create_workflows = workflow.CreateWorkflows(args.config_path)
-    luigi.build([create_workflows],
+    tasks = workflow.create_tasks(args.config_path)
+    luigi.build(tasks,
                 workers=config['max_running_jobs'],
                 local_scheduler=config['local_scheduler'])
 

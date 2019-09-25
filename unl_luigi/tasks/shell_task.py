@@ -1,5 +1,5 @@
 import luigi
-import slurm
+from unl_luigi.tasks import slurm
 import os
 import tempfile
 

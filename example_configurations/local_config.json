@@ -1,6 +1,7 @@
 {
     "platform": "local",
     "keep_tmp_files": false,
+    "tmp_path": "./",
     "local_scheduler": true,
     "max_running_jobs": 3
 }

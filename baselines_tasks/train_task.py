@@ -11,6 +11,11 @@ class TrainTask(ShellTask):
     augmentation = luigi.Parameter()
     seed = luigi.IntParameter()
 
+    def get_success_file_path(self):
+        return './luigi/' + str(self.env_type) + str(self.env) + str(
+            self.constraint) + str(self.reward_shaping) + str(
+                self.augmentation) + str(self.seed)
+
     def run(self):
         cmd_str = 'OPENAI_LOGDIR="./openai_log/${SLURM_JOBID}" python -m baselines.run'
         cmd_str += ' --env ' + str(self.env)
@@ -20,11 +25,16 @@ class TrainTask(ShellTask):
         elif self.env_type == 'mujoco':
             cmd_str += ' --alg ppo2'
             cmd_str += ' --num_timesteps 1e6'
-        if constraint:
+        if self.constraint:
             cmd_str += ' --constraints ' + str(self.constraint)
             cmd_str += ' augmentation ' + str(self.reward_shaping)
         if self.augmentation:
             cmd_str += ' --augmentation ' + str(self.augmentation)
 
-        print(cmd_str)
-        #self.run_command()
+        # print(self.get_success_file_path())
+        # print(cmd_str)
+        r = self.run_command(cmd_str)
+        print(r)
+
+    def output(self):
+        return {"success": luigi.LocalTarget(self.get_success_file_path())}
