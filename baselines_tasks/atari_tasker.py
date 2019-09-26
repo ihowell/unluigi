@@ -6,7 +6,7 @@ import json
 
 from baselines_tasks.train_task import TrainTask
 
-PREAMBLE_PATH = "/Users/equint/Documents/GitHub/unl-luigi/baselines_tasks/local_preamble.sh"
+PREAMBLE_PATH = "/work/scott/equint/unl-luigi/baselines_tasks/hcc_preamble.sh"
 
 
 def create_tasks(config_path):
@@ -23,7 +23,7 @@ def create_tasks(config_path):
 
     # per-task info
     env_type = ['atari']
-    env = ['Seaquest', 'SpaceInvader']
+    env = ['Seaquest', 'SpaceInvaders']
     constraint = ['', '1d_dithering', '1d_actuation']
     reward_shaping = [0, -1, -10, -100, -1000]
     augmentation = ['', 'constraint_state', 'action_history']
@@ -41,7 +41,7 @@ def create_tasks(config_path):
         TrainTask(slurminfo=slurminfo,
                   preamble_path=PREAMBLE_PATH,
                   platform='crane',
-                  tmp_path='./',
+                  tmp_path='/work/scott/equint/tmp/',
                   keep_tmp_files=False,
                   **a) for a in args
     ]

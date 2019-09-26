@@ -21,6 +21,6 @@ fi
 
 # Install any missing requirements for python
 pip install --user -r requirements.txt
-export PATH="$PATH:/home/choueiry/ihowell/.local/bin"
+export PATH=$PATH:/home/scott/equint/.local/bin
 
 python3 ./sched.py $@

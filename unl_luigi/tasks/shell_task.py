@@ -8,7 +8,7 @@ class ShellTask(slurm.SlurmTask):
     preamble_path = luigi.Parameter()
     platform = luigi.Parameter(default='crane')
     # TODO: tmp_path needs a clearer name
-    tmp_path = luigi.Parameter(default='./')
+    tmp_path = luigi.Parameter(default=None)
     keep_tmp_files = luigi.BoolParameter(default=False)
 
     def run_command(self,
@@ -38,7 +38,8 @@ class ShellTask(slurm.SlurmTask):
                                           perfstat_cmd, command)
 
         prefix = None
-        self.tmp_path = '%s/' % self.tmp_path
+        if not self.tmp_path is None:
+            prefix = '%s/' % self.tmp_path
 
         with tempfile.NamedTemporaryFile(
                 'w', prefix=prefix, suffix=".sh",

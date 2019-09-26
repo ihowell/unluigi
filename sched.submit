@@ -5,6 +5,6 @@ error = logs/sched.err
 log = logs/sched.log
 PeriodicRelease = ((CurrentTime - EnteredCurrentStatus) > 60)
 
-arguments = "workflow.py /work/choueiry/ihowell/blackhole/nonogram/hcc_config.json"
+arguments = "/work/scott/equint/unl-luigi/baselines_tasks/atari_tasker.py /work/scott/equint/unl-luigi/baselines_tasks/hcc_config.json"
 
 queue 1

@@ -1,3 +1,4 @@
+import os
 import luigi
 
 from unl_luigi.tasks.shell_task import ShellTask
@@ -11,8 +12,13 @@ class TrainTask(ShellTask):
     augmentation = luigi.Parameter()
     seed = luigi.IntParameter()
 
-    def get_success_file_path(self):
-        return './luigi/' + str(self.env_type) + str(self.env) + str(
+    def __init__(self, *args, **kwargs):
+        super(TrainTask, self).__init__(*args, **kwargs)
+        self.instance_name = "TrainTask_%s" % self.get_success_filename()
+        print(os.path.join(self.tmp_path, self.get_success_filename()))
+
+    def get_success_filename(self):
+        return str(self.env_type) + str(self.env) + str(
             self.constraint) + str(self.reward_shaping) + str(
                 self.augmentation) + str(self.seed)
 
@@ -34,7 +40,8 @@ class TrainTask(ShellTask):
         # print(self.get_success_file_path())
         # print(cmd_str)
         r = self.run_command(cmd_str)
-        print(r)
+        with open(os.path.join(self.tmp_path, self.get_success_filename()), 'w') as logfile:
+            logfile.write(str(r))
 
     def output(self):
-        return {"success": luigi.LocalTarget(self.get_success_file_path())}
+        return luigi.LocalTarget(os.path.join(self.tmp_path, self.get_success_filename() + '_success'))
