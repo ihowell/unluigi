@@ -1,12 +1,15 @@
 import luigi
-import slurm
+from unl_luigi.tasks import slurm
 import os
 import tempfile
-import json
 
 
 class ShellTask(slurm.SlurmTask):
-    config = luigi.Parameter()
+    preamble_path = luigi.Parameter()
+    platform = luigi.Parameter(default='crane')
+    # TODO: tmp_path needs a clearer name
+    tmp_path = luigi.Parameter(default=None)
+    keep_tmp_files = luigi.BoolParameter(default=False)
 
     def run_command(self,
                     command,
@@ -14,15 +17,9 @@ class ShellTask(slurm.SlurmTask):
                     time_limit=None,
                     perf_file=None):
         """Generate a bash script and run the script"""
-        if isinstance(self.config, str):
-            self.config = json.loads(self.config)
-
-        self_path = os.path.dirname(os.path.abspath(__file__))
-
         preamble = None
-        if self.config['platform'] == "crane":
-            with open("%s/crane_preamble.sh" % self_path,
-                      'r') as preamble_file:
+        if self.platform == "crane":
+            with open(self.preamble_path, 'r') as preamble_file:
                 preamble = preamble_file.read()
 
         memlimit_cmd = ""
@@ -41,14 +38,12 @@ class ShellTask(slurm.SlurmTask):
                                           perfstat_cmd, command)
 
         prefix = None
-        if 'tmp_path' in self.config:
-            '%s/' % self.config['tmp_path']
+        if not self.tmp_path is None:
+            prefix = '%s/' % self.tmp_path
 
         with tempfile.NamedTemporaryFile(
-                'w',
-                prefix=prefix,
-                suffix=".sh",
-                delete=not self.config['keep_tmp_files']) as command_file:
+                'w', prefix=prefix, suffix=".sh",
+                delete=not self.keep_tmp_files) as command_file:
             if preamble is not None:
                 command_file.write(preamble)
                 command_file.write('\n')
@@ -56,5 +51,6 @@ class ShellTask(slurm.SlurmTask):
             command_file.write(formatted_command)
             command_file.flush()
             execute_command = "bash %s" % command_file.name
-            return_values = self.ex(execute_command)
+            
+            return_values = self.ex(execute_command, salloc_append)
         return return_values

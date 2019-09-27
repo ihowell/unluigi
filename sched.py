@@ -35,13 +35,13 @@ def main():
             os.makedirs(config['tmp_path'])
 
     if not config['local_scheduler']:
-        if not os.path.exists(config['log_dir']):
-            os.makedirs(config['log_dir'])
-        proc = Popen(["luigid", "--logdir", config['log_dir']])
+        if not os.path.exists(config['luigi_log_dir']):
+            os.makedirs(config['luigi_log_dir'])
+        proc = Popen(["luigid", "--logdir", config['luigi_log_dir']])
         time.sleep(1)
 
-    create_workflows = workflow.CreateWorkflows(args.config_path)
-    luigi.build([create_workflows],
+    tasks = workflow.create_tasks(args.config_path)
+    luigi.build(tasks,
                 workers=config['max_running_jobs'],
                 local_scheduler=config['local_scheduler'])
 
