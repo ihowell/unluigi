@@ -51,5 +51,6 @@ class ShellTask(slurm.SlurmTask):
             command_file.write(formatted_command)
             command_file.flush()
             execute_command = "bash %s" % command_file.name
-            return_values = self.ex(execute_command)
+            
+            return_values = self.ex(execute_command, salloc_append)
         return return_values

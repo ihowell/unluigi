@@ -38,9 +38,10 @@ class SlurmInfo():
     time = None
     jobname = None
     threads = None
+    gres = None
 
     def __init__(self, runmode, project, partition, cores, time, jobname,
-                 threads):
+                 threads, gres=None):
         '''
         Init a SlurmInfo object, from string data.
         Time is on format: [[[d-]HH:]MM:]SS
@@ -52,6 +53,7 @@ class SlurmInfo():
         self.time = time
         self.jobname = jobname
         self.threads = threads
+        self.gres = gres
 
     def __str__(self):
         '''
@@ -62,12 +64,14 @@ class SlurmInfo():
                    'cores: {c}, '
                    'threads: {thr}, '
                    'jobname: {j}, '
-                   'project: {pr})').format(t=str(self.time),
+                   'project: {pr}, '
+                   'gres: {gr}), ').format(t=str(self.time),
                                             pt=self.partition,
                                             c=self.cores,
                                             thr=self.threads,
                                             j=self.jobname,
-                                            pr=self.project)
+                                            pr=self.project,
+                                            gr=self.gres)
         return strrepr
 
     def get_argstr_hpc(self):
@@ -75,22 +79,18 @@ class SlurmInfo():
         Return a formatted string with arguments and option flags to SLURM
         commands such as salloc and sbatch, for non-MPI, HPC jobs.
         '''
-        if self.time is not None:
-            argstr = ' -A {pr} -p {pt} -n {c} -t {t} -J {j} srun -n 1 -c {thr} '.format(
-                pr=self.project,
+        salloc_argstr = ' -A {pr} -p {pt} -n {c} -J {j} '.format(pr=self.project,
                 pt=self.partition,
                 c=self.cores,
                 t=self.time,
-                j=self.jobname,
-                thr=self.threads)
-        else:
-            argstr = ' -A {pr} -p {pt} -n {c} -J {j} srun -n 1 -c {thr} '.format(
-                pr=self.project,
-                pt=self.partition,
-                c=self.cores,
-                j=self.jobname,
-                thr=self.threads)
-        return argstr
+                j=self.jobname)
+        if self.time is not None:
+            salloc_argstr += '-t {t} '.format(t=self.time)
+        if self.gres is not None:
+            sallow_argstr += '--gres={} '.format(self.gres)
+
+        srun_argstr = ' srun -n 1 -c {thr} '.format(thr=self.threads)
+        return salloc_argstr + srun_argstr
 
     def get_argstr_mpi(self):
         '''

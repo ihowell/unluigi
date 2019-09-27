@@ -19,7 +19,7 @@ def create_tasks(config_path):
         slurminfo = slurm.SlurmInfo(slurm.RUNMODE_HPC,
                                     config['crane']['account'],
                                     config['crane']['partition'], 1, None,
-                                    "Luigi_Workflow_Test", 1)
+                                    "Luigi_Workflow_Test", 1, gres='gpu:1')
 
     # per-task info
     env_type = ['atari']
