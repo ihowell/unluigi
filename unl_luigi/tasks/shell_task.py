@@ -7,8 +7,8 @@ import tempfile
 class ShellTask(slurm.SlurmTask):
     preamble_path = luigi.Parameter()
     platform = luigi.Parameter(default='crane')
-    # TODO: tmp_path needs a clearer name
-    tmp_path = luigi.Parameter(default=None)
+    # TODO: tmp_path_prefix needs a clearer name
+    tmp_path_prefix = luigi.Parameter(default=None)
     keep_tmp_files = luigi.BoolParameter(default=False)
 
     def run_command(self,
@@ -38,8 +38,8 @@ class ShellTask(slurm.SlurmTask):
                                           perfstat_cmd, command)
 
         prefix = None
-        if not self.tmp_path is None:
-            prefix = '%s/' % self.tmp_path
+        if not self.tmp_path_prefix is None:
+            prefix = '%s/' % self.tmp_path_prefix
 
         with tempfile.NamedTemporaryFile(
                 'w', prefix=prefix, suffix=".sh",
@@ -51,6 +51,6 @@ class ShellTask(slurm.SlurmTask):
             command_file.write(formatted_command)
             command_file.flush()
             execute_command = "bash %s" % command_file.name
-            
+
             return_values = self.ex(execute_command, salloc_append)
         return return_values

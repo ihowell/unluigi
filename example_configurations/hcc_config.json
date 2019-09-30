@@ -5,7 +5,6 @@
         "partition": "batch"
     },
     "max_running_jobs": 5,
-    "local_scheduler": false,
     "tmp_path": "/work/{advisor}/{user_name}/tmp/"
     "keep_tmp_files": false
 }
