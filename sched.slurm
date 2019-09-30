@@ -10,4 +10,4 @@ pip install --user -r requirements.txt
 export PATH=$PATH:/home/[groupname]/[username]/.local/bin
 
 export LUIGI_CONFIG_PATH=$1
-python3 ./sched.py ${@:2}
+python3 ./unl_luigi/sched.py ${@:2}
