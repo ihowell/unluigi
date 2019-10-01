@@ -10,10 +10,6 @@ class FooTask(ShellTask):
                                        min_value=0,
                                        max_value=10000)
 
-    def __init__(self, *args, **kwargs):
-        super(FooTask, self).__init__(*args, **kwargs)
-        self.instance_name = "FooTask_%d" % self.foo_num
-
     def output(self):
         return luigi.LocalTarget(
             os.path.join(self.foo_directory, "foo_%d.txt" % self.foo_num))

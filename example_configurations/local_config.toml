@@ -1,0 +1,17 @@
+[core]
+workers = 3
+
+
+[SlurmConfig]
+jobname = "luigi-job"
+runmode = "runmode_local"
+group_name = "choueiry"
+partition = "batch"
+cores = 1
+time = "7200"
+threads = 1
+
+
+[ShellConfig]
+tmp_path_prefix = "/Users/ihowell/Data/test/tmp/"
+keep_tmp_files = false
