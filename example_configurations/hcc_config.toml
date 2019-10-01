@@ -4,14 +4,14 @@ workers = 900
 
 [ShellConfig]
 preamble_path = "unl_luigi/tasks/crane_preamble.sh"
-tmp_path_prefix = "/work/{advisor}/{user_name}/tmp/"
+tmp_path_prefix = "/work/{group_name}/{user_name}/tmp/"
 keep_tmp_files = false
 
 
 [SlurmConfig]
 jobname = "luigi-job"
 runmode = "runmode_hpc"
-group_name = "choueiry"
+group_name = "{group_name}"
 partition = "batch"
 cores = 1
 time = "7200"
