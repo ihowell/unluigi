@@ -1,6 +1,0 @@
-{
-    "platform": "local",
-    "keep_tmp_files": false,
-    "tmp_path": "./",
-    "max_running_jobs": 3
-}

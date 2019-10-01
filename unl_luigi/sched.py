@@ -1,44 +1,28 @@
 import luigi
-import time
-from subprocess import Popen
 import argparse
 import importlib.util
 import os
-import sys
-import json
+from unl_luigi.util.parse_unknown_args import parse_unknown_args, parse_cmdline_kwargs
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "workflow", help="path to a python file containing a `Workflow` class")
-    parser.add_argument("config_path",
-                        help="Path to a configuration json file.")
-    args = parser.parse_args()
+
+    args, unknown_args = parser.parse_known_args()
+    extra_args = parse_cmdline_kwargs(unknown_args)
 
     if not os.path.isfile(args.workflow):
         raise Exception("Invalid workflow path " + args.workflow)
-
-    if not os.path.isfile(args.config_path):
-        raise Exception("Given config_path does not point to a file %s" %
-                        args.config_path)
-
-    with open(args.config_path, 'r') as config_file:
-        config = json.load(config_file)
 
     spec = importlib.util.spec_from_file_location("workflow", args.workflow)
     workflow = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(workflow)
 
-    if 'tmp_path' in config:
-        if not os.path.exists(config['tmp_path']):
-            os.makedirs(config['tmp_path'])
+    tasks = workflow.create_tasks(**extra_args)
+    luigi.build(tasks, local_scheduler=True)
 
-    tasks = workflow.create_tasks(args.config_path)
-    luigi.build(tasks,
-                workers=config['max_running_jobs'],
-                local_scheduler=True)
 
 if __name__ == '__main__':
-    print(sys.argv)
     main()
