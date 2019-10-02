@@ -1,3 +1,16 @@
+[StardustConfig]
+stardust_path = "/work/choueiry/ihowell/stampede/nonogram/"
+
+
+[BlackholeConfig]
+blackhole_app = "/work/choueiry/ihowell/binaries/BlackholeApp"
+blackhole_path = "/work/choueiry/ihowell/blackhole/nonogram/"
+
+
+[BlackholeWebConfig]
+blackhole_web_path = "/work/choueiry/ihowell/blackhole_web/"
+
+
 [core]
 workers = 900
 
@@ -14,5 +27,4 @@ runmode = "runmode_hpc"
 group_name = "{group_name}"
 partition = "batch"
 cores = 1
-time = "7200"
 threads = 1

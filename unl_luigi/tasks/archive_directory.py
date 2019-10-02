@@ -1,8 +1,8 @@
 import luigi
-import slurm
 import os
-from targets.archive_target import ArchiveTarget
 import random
+from unl_luigi.targets.archive_target import ArchiveTarget
+from unl_luigi.tasks.slurm import SlurmTask
 
 
 class atomic_file_pointer():
@@ -37,7 +37,7 @@ class atomic_file_pointer():
         return self.__tmp_path
 
 
-class ArchiveDirectory(slurm.SlurmTask):
+class ArchiveDirectory(SlurmTask):
     directory_path = luigi.Parameter()
     output_tar = luigi.Parameter()
     relative_tar_path = luigi.Parameter()

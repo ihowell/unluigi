@@ -1,13 +1,8 @@
 import luigi
-from unl_luigi.tasks import slurm
 import os
 import tempfile
-
-
-class ShellConfig(luigi.Config):
-    preamble_path = luigi.Parameter(default=None)
-    tmp_path_prefix = luigi.Parameter(default=None)
-    keep_tmp_files = luigi.BoolParameter(default=False)
+from unl_luigi.config.shell import ShellConfig
+from unl_luigi.tasks import slurm
 
 
 class ShellTask(slurm.SlurmTask):
