@@ -17,14 +17,14 @@ workers = 900
 
 [ShellConfig]
 preamble_path = "unl_luigi/tasks/crane_preamble.sh"
-tmp_path_prefix = "/work/{group_name}/{user_name}/tmp/"
+tmp_path_prefix = "/work/choueiry/ihowell/tmp/"
 keep_tmp_files = false
 
 
 [SlurmConfig]
-jobname = "luigi-job"
+jobname = "Blackhole"
 runmode = "runmode_hpc"
 group_name = "{group_name}"
-partition = "batch"
+partition = "batch,choueiry"
 cores = 1
 threads = 1

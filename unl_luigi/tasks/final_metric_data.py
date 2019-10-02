@@ -25,22 +25,8 @@ class FinalMetricData(ShellTask):
             hlc_id = 1
         elif "apoacaroundu" in self.blackhole_path.lower():
             hlc_id = 1
-        elif "apoac" in self.blackhole_path.lower():
-            hlc_id = 0
         elif "a-ucyc-bfsc-poac" in self.blackhole_path.lower():
             hlc_id = 1
-        elif "poac1" in self.blackhole_path.lower():
-            hlc_id = 0
-        elif "pw-ac2" in self.blackhole_path.lower():
-            hlc_id = 0
-        elif "r3c" in self.blackhole_path.lower():
-            hlc_id = 0
-        elif "r4c" in self.blackhole_path.lower():
-            hlc_id = 0
-        elif "wr3c" in self.blackhole_path.lower():
-            hlc_id = 0
-        elif "wr4c" in self.blackhole_path.lower():
-            hlc_id = 0
 
         if hlc_id is not None:
             extra_args += "--hlc %d" % hlc_id

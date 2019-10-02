@@ -10,8 +10,14 @@ blackhole_path = "/Users/ihowell/Data/luigi_test_blackhole/"
 [BlackholeWebConfig]
 blackhole_web_path = "/Users/ihowell/Data/luigi_test_blackhole_web/"
 
+
 [core]
 workers = 3
+
+
+[ShellConfig]
+tmp_path_prefix = "./"
+keep_tmp_files = false
 
 
 [SlurmConfig]
@@ -22,8 +28,3 @@ partition = "batch"
 cores = 1
 time = "7200"
 threads = 1
-
-
-[ShellConfig]
-tmp_path_prefix = "./"
-keep_tmp_files = false
