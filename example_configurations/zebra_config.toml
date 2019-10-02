@@ -12,7 +12,7 @@ blackhole_web_path = "/mnt/hdd/ihowell/blackhole_web/"
 
 
 [core]
-workers = 3
+workers = 30
 
 
 [ShellConfig]
