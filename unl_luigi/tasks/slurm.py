@@ -1,5 +1,5 @@
 '''
-Taken from: https://github.com/pharmbio/sciluigi/blob/master/sciluigi/slurm.py
+Modified from: https://github.com/pharmbio/sciluigi/blob/master/sciluigi/slurm.py
 
 This module contains functionality related to integration with the SLURM HPC
 resource manger.
@@ -8,7 +8,6 @@ resource manger.
 import datetime
 import logging
 import re
-import json
 import time
 import luigi.parameter
 import luigi.task
@@ -27,112 +26,65 @@ RUNMODE_MPI = 'runmode_mpi'
 # ================================================================================
 
 
-class SlurmInfo():
-    '''
-    A data object for keeping slurm run parameters.
-    '''
-    runmode = None  # One of RUNMODE_LOCAL|RUNMODE_HPC|RUNMODE_MPI
-    project = None
-    partition = None
-    cores = None
-    time = None
-    jobname = None
-    threads = None
-
-    def __init__(self, runmode, project, partition, cores, time, jobname,
-                 threads):
-        '''
-        Init a SlurmInfo object, from string data.
-        Time is on format: [[[d-]HH:]MM:]SS
-        '''
-        self.runmode = runmode
-        self.project = project
-        self.partition = partition
-        self.cores = cores
-        self.time = time
-        self.jobname = jobname
-        self.threads = threads
-
-    def __str__(self):
-        '''
-        Return a readable string representation of the info stored
-        '''
-        strrepr = ('(time: {t}, '
-                   'partition: {pt}, '
-                   'cores: {c}, '
-                   'threads: {thr}, '
-                   'jobname: {j}, '
-                   'project: {pr})').format(t=str(self.time),
-                                            pt=self.partition,
-                                            c=self.cores,
-                                            thr=self.threads,
-                                            j=self.jobname,
-                                            pr=self.project)
-        return strrepr
-
-    def get_argstr_hpc(self):
-        '''
-        Return a formatted string with arguments and option flags to SLURM
-        commands such as salloc and sbatch, for non-MPI, HPC jobs.
-        '''
-        if self.time is not None:
-            argstr = ' -A {pr} -p {pt} -n {c} -t {t} -J {j} srun -n 1 -c {thr} '.format(
-                pr=self.project,
-                pt=self.partition,
-                c=self.cores,
-                t=self.time,
-                j=self.jobname,
-                thr=self.threads)
-        else:
-            argstr = ' -A {pr} -p {pt} -n {c} -J {j} srun -n 1 -c {thr} '.format(
-                pr=self.project,
-                pt=self.partition,
-                c=self.cores,
-                j=self.jobname,
-                thr=self.threads)
-        return argstr
-
-    def get_argstr_mpi(self):
-        '''
-        Return a formatted string with arguments and option flags to SLURM
-        commands such as salloc and sbatch, for MPI jobs.
-        '''
-        argstr = ' -A {pr} -p {pt} -n {c1} -t {t} -J {j} mpirun -v -np {c2} '.format(
-            pr=self.project,
-            pt=self.partition,
-            c1=self.cores,
-            t=self.time,
-            j=self.jobname,
-            c2=self.cores)
-        return argstr
+class SlurmConfig(luigi.Config):
+    runmode = luigi.Parameter(
+        default=None)  # One of RUNMODE_LOCAL|RUNMODE_HPC|RUNMODE_MPI
+    group_name = luigi.Parameter(default=None)
+    partition = luigi.Parameter(default=None)
+    cores = luigi.IntParameter(default=1)
+    time = luigi.Parameter(default=None)
+    jobname = luigi.Parameter(default=None)
+    threads = luigi.IntParameter(default=1)
+    gres = luigi.Parameter(default=None)
 
 
 # ================================================================================
 
 
-class SlurmInfoParameter(luigi.parameter.Parameter):
+def get_argstr_hpc():
     '''
-    A specialized luigi parameter, taking SlurmInfo objects.
+    Return a formatted string with arguments and option flags to SLURM
+    commands such as salloc and sbatch, for non-MPI, HPC jobs.
     '''
-    def serialize(self, x):
-        if isinstance(x, SlurmInfo):
-            return json.dumps(x.__dict__)
-        else:
-            raise Exception('Parameter is not instance of SlurmInfo: %s' % s)
+    config = SlurmConfig()
+    salloc_argstr = ' -A {g} -p {pt} -n {c} -J {j} '.format(
+        g=config.group_name,
+        pt=config.partition,
+        c=config.cores,
+        t=config.time,
+        j=config.jobname)
+    if config.time is not None:
+        salloc_argstr += '-t {t} '.format(t=config.time)
+    if config.gres is not None:
+        salloc_argstr += '--gres={} '.format(config.gres)
 
-    def parse(self, s):
-        return SlurmInfo(**json.loads(s))
+    srun_argstr = ' srun -n 1 -c {thr} '.format(thr=config.threads)
+    return salloc_argstr + srun_argstr
+
+
+def get_argstr_mpi():
+    '''
+    Return a formatted string with arguments and option flags to SLURM
+    commands such as salloc and sbatch, for MPI jobs.
+    '''
+    config = SlurmConfig()
+    argstr = ' -A {g} -p {pt} -n {c1} -t {t} -J {j} mpirun -v -np {c2} '.format(
+        g=config.group_name,
+        pt=config.partition,
+        c1=config.cores,
+        t=config.time,
+        j=config.jobname,
+        c2=config.cores)
+    return argstr
 
 
 # ================================================================================
 
 
-class SlurmHelpers():
+class SlurmTask(luigi.task.Task):
     '''
-    Mixin with various convenience methods for executing jobs via SLURM
+    Various convenience methods for executing jobs via SLURM
     '''
-    # Other class-fields
-    slurminfo = SlurmInfoParameter(default=None)  # Class: SlurmInfo
 
     # Main Execution methods
     def ex(self, command):
@@ -142,13 +94,14 @@ class SlurmHelpers():
         if isinstance(command, list):
             command = ' '.join(command)
 
-        if self.slurminfo.runmode == RUNMODE_LOCAL:
+        slurminfo = SlurmConfig()
+        if slurminfo.runmode == RUNMODE_LOCAL:
             log.info('Executing command in local mode: %s', command)
             return self.ex_local(command)  # Defined in task.py
-        elif self.slurminfo.runmode == RUNMODE_HPC:
+        elif slurminfo.runmode == RUNMODE_HPC:
             log.info('Executing command in HPC mode: %s', command)
             return self.ex_hpc(command)
-        elif self.slurminfo.runmode == RUNMODE_MPI:
+        elif slurminfo.runmode == RUNMODE_MPI:
             log.info('Executing command in MPI mode: %s', command)
             return self.ex_mpi(command)
 
@@ -186,8 +139,7 @@ class SlurmHelpers():
         if isinstance(command, list):
             command = sub.list2cmdline(command)
 
-        fullcommand = 'salloc %s %s' % (self.slurminfo.get_argstr_hpc(),
-                                        command)
+        fullcommand = 'salloc %s %s' % (get_argstr_hpc(), command)
         print("Full hpc command: %s" % fullcommand)
         (retcode, stdout, stderr) = self.ex_local(fullcommand)
 
@@ -201,8 +153,7 @@ class SlurmHelpers():
         if isinstance(command, list):
             command = sub.list2cmdline(command)
 
-        fullcommand = 'salloc %s %s' % (self.slurminfo.get_argstr_mpi(),
-                                        command)
+        fullcommand = 'salloc %s %s' % (get_argstr_mpi(), command)
         (retcode, stdout, stderr) = self.ex_local(fullcommand)
 
         self.log_slurm_info(stderr)
@@ -269,13 +220,3 @@ class SlurmHelpers():
 
                 log.info('Slurm execution time for task %s was %ss',
                          self.instance_name, self.slurm_exectime_sec)
-
-
-# ================================================================================
-
-
-class SlurmTask(SlurmHelpers, luigi.task.Task):
-    '''
-    luigi task that includes the SlurmHelpers mixin.
-    '''
-    pass

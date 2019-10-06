@@ -11,10 +11,6 @@ class BarTask(ShellTask):
                                        max_value=10000)
     bar_directory = luigi.Parameter()
 
-    def __init__(self, *args, **kwargs):
-        super(BarTask, self).__init__(*args, **kwargs)
-        self.instance_name = "BarTask_%d" % self.foo_num
-
     def output(self):
         return luigi.LocalTarget(
             os.path.join(self.bar_directory,
