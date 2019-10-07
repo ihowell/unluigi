@@ -9,18 +9,7 @@ from baselines_tasks.train_task import TrainTask
 PREAMBLE_PATH = "/Users/equint/Documents/GitHub/unl-luigi/baselines_tasks/local_preamble.sh"
 
 
-def create_tasks(config_path):
-    with open(config_path, 'r') as config_json:
-        config = json.load(config_json)
-
-    slurminfo = slurm.SlurmInfo(slurm.RUNMODE_LOCAL, "LuigiSetup", "batch", 1,
-                                0, "Luigi_Workflow_Test", 1)
-    if config['platform'] == "crane":
-        slurminfo = slurm.SlurmInfo(slurm.RUNMODE_HPC,
-                                    config['crane']['account'],
-                                    config['crane']['partition'], 1, None,
-                                    "Luigi_Workflow_Test", 1)
-
+def create_tasks():
     # per-task info
     env_type = ['atari']
     env = ['Seaquest', 'SpaceInvader']
@@ -38,8 +27,7 @@ def create_tasks(config_path):
     ]
 
     return [
-        TrainTask(slurminfo=slurminfo,
-                  preamble_path=PREAMBLE_PATH,
+        TrainTask(preamble_path=PREAMBLE_PATH,
                   platform='crane',
                   tmp_path='./',
                   keep_tmp_files=False,
