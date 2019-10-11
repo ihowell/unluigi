@@ -1,8 +1,8 @@
 import luigi
-import slurm
-import os
-from targets.archive_target import ArchiveTarget
 import random
+import os
+import unluigi.tasks.slurm as slurm
+from unluigi.targets.archive_target import ArchiveTarget
 
 
 class atomic_file_pointer():

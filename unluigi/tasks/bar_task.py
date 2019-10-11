@@ -1,7 +1,7 @@
 import luigi
-from tasks.shell_task import ShellTask
-from util.atomic_file_pointer import AtomicFilePointer
 import os
+from unluigi.tasks.shell_task import ShellTask
+from unluigi.util.atomic_file_pointer import AtomicFilePointer
 
 
 class BarTask(ShellTask):

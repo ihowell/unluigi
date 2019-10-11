@@ -1,8 +1,8 @@
 import luigi
 import os
-from tasks.foo_task import FooTask
-from tasks.bar_task import BarTask
-import util
+import unluigi.util as util
+from unluigi.tasks.foo_task import FooTask
+from unluigi.tasks.bar_task import BarTask
 
 
 class FooWorkflow(luigi.WrapperTask):
