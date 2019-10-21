@@ -1,3 +1,15 @@
+[FooWorkflow]
+root_path = "/Users/ihowell/Data/test/"
+
+
+[FooTask]
+foo_directory = "/Users/ihowell/Data/test/foo/"
+
+
+[BarTask]
+bar_directory = "/Users/ihowell/Data/test/bar/"
+
+
 [core]
 workers = 3
 
