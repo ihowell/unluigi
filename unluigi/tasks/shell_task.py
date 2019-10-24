@@ -1,7 +1,7 @@
 import luigi
-from unl_luigi.tasks import slurm
 import os
 import tempfile
+from unluigi.tasks import slurm
 
 
 class ShellConfig(luigi.Config):
@@ -35,7 +35,7 @@ class ShellTask(slurm.SlurmTask):
         formatted_command += command
 
         prefix = None
-        if not config.tmp_path_prefix is None:
+        if config.tmp_path_prefix is not None:
             prefix = '%s/' % config.tmp_path_prefix
             if not os.path.exists(prefix):
                 os.makedirs(prefix)

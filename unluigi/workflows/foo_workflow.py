@@ -1,8 +1,8 @@
 import luigi
 import os
-from tasks.foo_task import FooTask
-from tasks.bar_task import BarTask
-import util
+import unluigi.util as util
+from unluigi.tasks.foo_task import FooTask
+from unluigi.tasks.bar_task import BarTask
 
 
 class FooWorkflow(luigi.WrapperTask):
@@ -22,14 +22,13 @@ class FooWorkflow(luigi.WrapperTask):
             os.makedirs(bar_dir)
 
         tasks = [
-            FooTask(foo_directory=foo_dir, foo_num=self.foo_num),
+            FooTask(foo_num=self.foo_num),
             BarTask(foo_path=os.path.join(foo_dir, "foo_%s.txt"),
-                    foo_num=self.foo_num,
-                    bar_directory=bar_dir)
+                    foo_num=self.foo_num)
         ]
 
         return util.sequence_tasks(tasks)
 
 
 def create_tasks(root_path):
-    return [FooWorkflow(root_path=root_path, foo_num=i) for i in range(5)]
+    return [FooWorkflow(foo_num=i) for i in range(5)]

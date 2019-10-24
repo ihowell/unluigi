@@ -1,7 +1,7 @@
 import luigi
-from tasks.shell_task import ShellTask
-from util.atomic_file_pointer import AtomicFilePointer
 import os
+from unluigi.tasks.shell_task import ShellTask
+from unluigi.util.atomic_file_pointer import AtomicFilePointer
 
 
 class BarTask(ShellTask):
@@ -24,9 +24,8 @@ class BarTask(ShellTask):
                 "echo \"%d - bar\" > %s" % (self.foo_num, bar_file.tmp_path))
 
         if returncode > 0:
-            raise Exception(
-                "Received error code %s in ParseStardustFile: %s -> %s" %
-                (returncode, self.foo_path, self.bar_directory))
+            raise Exception("Received error code %s: %s -> %s" %
+                            (returncode, self.foo_path, self.bar_directory))
 
         with self.output().open('w') as out_file:
             out_file.write("1")
