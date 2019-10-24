@@ -16,7 +16,7 @@ def create_tasks():
     constraint = ['', '1d_dithering', '1d_actuation']
     reward_shaping = [0, -1, -10, -100, -1000]
     augmentation = ['', 'constraint_state', 'action_history']
-    seed = [403297842]
+    seed = [7842]
     arg_names = [
         'env_type', 'env', 'constraint', 'reward_shaping', 'augmentation',
         'seed'
