@@ -2,7 +2,7 @@ import luigi
 import argparse
 import importlib.util
 import os
-from unluigi.util.parse_unknown_args import parse_unknown_args, parse_cmdline_kwargs
+from unluigi.util.parse_unknown_args import parse_cmdline_kwargs
 
 
 def main():
@@ -20,6 +20,7 @@ def main():
     workflow = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(workflow)
 
+    print(extra_args)
     tasks = workflow.create_tasks(**extra_args)
     luigi.build(tasks, local_scheduler=True)
 
