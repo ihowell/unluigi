@@ -1,8 +1,18 @@
 import luigi
 import os
 import tempfile
+<<<<<<< HEAD:unl_luigi/tasks/shell_task.py
 from unl_luigi.config.shell import ShellConfig
 from unl_luigi.tasks import slurm
+=======
+from unluigi.tasks import slurm
+
+
+class ShellConfig(luigi.Config):
+    preamble_path = luigi.Parameter(default=None)
+    tmp_path_prefix = luigi.Parameter(default=None)
+    keep_tmp_files = luigi.BoolParameter(default=False)
+>>>>>>> be388125a76b86afe1b7c581ef8de5e17f6ab1d6:unluigi/tasks/shell_task.py
 
 
 class ShellTask(slurm.SlurmTask):
@@ -30,7 +40,7 @@ class ShellTask(slurm.SlurmTask):
         formatted_command += command
 
         prefix = None
-        if not config.tmp_path_prefix is None:
+        if config.tmp_path_prefix is not None:
             prefix = '%s/' % config.tmp_path_prefix
             if not os.path.exists(prefix):
                 os.makedirs(prefix)

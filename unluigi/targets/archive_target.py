@@ -1,5 +1,4 @@
 import luigi
-import luigi.local_target
 import tarfile
 import os
 import random

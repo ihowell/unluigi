@@ -2,7 +2,7 @@ import luigi
 import argparse
 import importlib.util
 import os
-from unl_luigi.util.parse_unknown_args import parse_unknown_args, parse_cmdline_kwargs
+from unluigi.util.parse_unknown_args import parse_unknown_args, parse_cmdline_kwargs
 
 
 def main():
