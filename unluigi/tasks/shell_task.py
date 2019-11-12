@@ -1,10 +1,6 @@
 import luigi
 import os
 import tempfile
-<<<<<<< HEAD:unl_luigi/tasks/shell_task.py
-from unl_luigi.config.shell import ShellConfig
-from unl_luigi.tasks import slurm
-=======
 from unluigi.tasks import slurm
 
 
@@ -12,7 +8,6 @@ class ShellConfig(luigi.Config):
     preamble_path = luigi.Parameter(default=None)
     tmp_path_prefix = luigi.Parameter(default=None)
     keep_tmp_files = luigi.BoolParameter(default=False)
->>>>>>> be388125a76b86afe1b7c581ef8de5e17f6ab1d6:unluigi/tasks/shell_task.py
 
 
 class ShellTask(slurm.SlurmTask):
@@ -58,3 +53,18 @@ class ShellTask(slurm.SlurmTask):
 
             return_values = self.ex(execute_command)
         return return_values
+
+    def record_output(self, base_path, task_name, returncode, stdout, stderr):
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        with open("%s/%s.retcode" % (base_path, task_name), 'w') as out_file:
+            out_file.write(str(returncode))
+        with open("%s/%s.out" % (base_path, task_name), 'w') as out_file:
+            out_file.write(stdout.decode("utf-8"))
+        with open("%s/%s.err" % (base_path, task_name), 'w') as out_file:
+            out_file.write(stderr.decode("utf-8"))
+
+        if returncode > 0:
+            raise Exception("Received error code %s in %s" %
+                            (returncode, task_name))

@@ -1,68 +1,102 @@
 import luigi
 import os
-from unl_luigi.config.blackhole import BlackholeConfig
-from unl_luigi.tasks.shell_task import ShellTask
+from unluigi.config.stardust import StardustConfig
+from unluigi.config.blackhole import BlackholeConfig
+from unluigi.tasks.shell_task import ShellTask
 
 
 class ParseStardustFile(ShellTask):
     """Precondition: blackhole_path ends with a /"""
-    stardust_instance = luigi.Parameter()
-    blackhole_path = luigi.Parameter()
+    benchmark = luigi.Parameter()
+    instance = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
         super(ParseStardustFile, self).__init__(*args, **kwargs)
-        self.instance_name = "ParseStardustFile_%s" % self.stardust_instance
+        self.instance_name = "ParseStardustFile_%s_%s" % (self.benchmark,
+                                                          self.instance)
 
     def output(self):
-        return luigi.LocalTarget("%s_tasks/parse.success" %
-                                 self.blackhole_path)
+        return luigi.LocalTarget(
+            "%s/%s/%s_tasks/parse.success" %
+            (BlackholeConfig().blackhole_path, self.benchmark, self.instance))
 
     def run(self):
-        input_file = "%s.xml.outputFiles/out.sd" % (self.stardust_instance)
+        input_file = os.path.join(StardustConfig().stardust_path,
+                                  self.benchmark, "%s.sd" % self.instance)
+        output_dir = os.path.join(BlackholeConfig().blackhole_path,
+                                  self.benchmark, self.instance)
+        tasks_dir = os.path.join(BlackholeConfig().blackhole_path,
+                                 self.benchmark, "%s_tasks" % self.instance)
+
+        new_cons = []
+        ignore_cons = []
+        map_cons = []
+        hlcs = []
 
         consistency_args = ""
-        if "prepeak-poac1" in self.blackhole_path.lower():
-            consistency_args = "-n GAC -n POAC1 -g 0 -g 2 -m 1-0 -m 3-1 -m 4-1"
-        elif "anpoac" in self.blackhole_path.lower():
-            consistency_args = "-n STR2 -n POACQ -g 0 -m 1-0 -m 2-1 -m 3-1"
-        elif "apoacaroundu" in self.blackhole_path.lower():
-            consistency_args = "-n STR2 -n POACPartial -g 0 -m 1-0 -m 2-1 -m 3-1"
-        elif "apoac" in self.blackhole_path.lower():
-            consistency_args = "-n APOAC -g 0 -m 1-0 -m 2-0"
-        elif "a-ucyc-bfsc-poac" in self.blackhole_path.lower():
-            consistency_args = "-n STR2 -n POACQ -g 0 -m 1-0 -m 2-1 -m 3-1"
-        elif "poac1" in self.blackhole_path.lower():
-            consistency_args = "-n POAC1 -m 0-0 -m 1-0"
-        elif "pw-ac2" in self.blackhole_path.lower():
-            consistency_args = "-n PW-AC2 -g 1 -m 0-0"
-        elif "r3c" in self.blackhole_path.lower():
-            consistency_args = "-n PerTuple -g 1 -m 0-0"
-        elif "r4c" in self.blackhole_path.lower():
-            consistency_args = "-n PerTuple -g 1 -m 0-0"
-        elif "wr3c" in self.blackhole_path.lower():
-            consistency_args = "-n PerTuple -g 1 -m 0-0"
-        elif "wr43c" in self.blackhole_path.lower():
-            consistency_args = "-n PerTuple -g 1 -m 0-0"
+        if "prepeak-poac1" in self.instance.lower():
+            new_cons = ["GAC", "POAC1"]
+            ignore_cons = [0, 2]
+            map_cons = ["1-0", "3-1", "4-1"]
+            hlcs = [1]
+        elif "anpoac" in self.instance.lower():
+            new_cons = ["STR2", "POACQ"]
+            ignore_cons = [0]
+            map_cons = ["1-0", "2-1", "3-1"]
+            hlcs = [1]
+        elif "apoacaroundu" in self.instance.lower():
+            new_cons = ["STR2", "POACPartial"]
+            ignore_cons = [0]
+            map_cons = ["1-0", "2-1", "3-1"]
+            hlcs = [1]
+        elif "apoac" in self.instance.lower():
+            new_cons = ["APOAC"]
+            ignore_cons = [0]
+            map_cons = ["1-0", "2-0"]
+        elif "a-ucyc-bfsc-poac" in self.instance.lower():
+            new_cons = ["STR2", "POACQ"]
+            ignore_cons = [0]
+            map_cons = ["1-0", "2-1", "3-1"]
+        elif "poac1" in self.instance.lower():
+            new_cons = ["POAC1"]
+            map_cons = ["0-0", "1-0"]
+        elif "pw-ac2" in self.instance.lower():
+            new_cons = ["PW-AC2"]
+            ignore_cons = [1]
+            map_cons = ["0-0"]
+        elif "r3c" in self.instance.lower():
+            new_cons = ["PerTuple"]
+            ignore_cons = [1]
+            map_cons = ["0-0"]
+        elif "r4c" in self.instance.lower():
+            new_cons = ["PerTuple"]
+            ignore_cons = [1]
+            map_cons = ["0-0"]
+        elif "wr3c" in self.instance.lower():
+            new_cons = ["PerTuple"]
+            ignore_cons = [1]
+            map_cons = ["0-0"]
+        elif "wr43c" in self.instance.lower():
+            new_cons = ["PerTuple"]
+            ignore_cons = [1]
+            map_cons = ["0-0"]
+
+        consistency_args = []
+        for n in new_cons:
+            consistency_args.extend(["-n", str(n)])
+        for g in ignore_cons:
+            consistency_args.extend(["-g", str(g)])
+        for m in map_cons:
+            consistency_args.extend(["-m", str(m)])
+        for h in hlcs:
+            consistency_args.extend(["-u", str(h)])
+
+        consistency_args = " ".join(consistency_args)
 
         command = "%s -c crane_parse { -i %s -d %s %s}" % (BlackholeConfig(
-        ).blackhole_app, input_file, self.blackhole_path, consistency_args)
+        ).blackhole_app, input_file, output_dir, consistency_args)
         (returncode, stdout, stderr) = self.run_command(command)
-
-        base_path = "%s_tasks/" % self.blackhole_path
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-
-        with open("%s/parse.retcode" % base_path, 'w') as out_file:
-            out_file.write(str(returncode))
-        with open("%s/parse.out" % base_path, 'w') as out_file:
-            out_file.write(stdout.decode("utf-8"))
-        with open("%s/parse.err" % base_path, 'w') as out_file:
-            out_file.write(stderr.decode("utf-8"))
-
-        if returncode > 0:
-            raise Exception(
-                "Received error code %s in ParseStardustFile: %s -> %s" %
-                (returncode, self.stardust_instance, self.blackhole_path))
+        self.record_output(tasks_dir, "parse", returncode, stdout, stderr)
 
         with self.output().open('w') as out_file:
             out_file.write("1")

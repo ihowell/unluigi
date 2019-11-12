@@ -17,7 +17,7 @@ workers = 3
 
 [ShellConfig]
 tmp_path_prefix = "./"
-keep_tmp_files = false
+keep_tmp_files = true
 
 
 [SlurmConfig]

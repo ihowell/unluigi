@@ -1,32 +1,47 @@
 import luigi
 import os
-from unl_luigi.config.blackhole import BlackholeConfig
-from unl_luigi.config.blackhole_web import BlackholeWebConfig
-from unl_luigi.tasks.shell_task import ShellTask
+from unluigi.tasks.final_metric_data import FinalMetricData
+from unluigi.config.blackhole import BlackholeConfig
+from unluigi.config.blackhole_web import BlackholeWebConfig
+from unluigi.tasks.shell_task import ShellTask
 
 
 class CopyBlackholeWebData(ShellTask):
+    # Should be the name of the instance. For example: mug
     benchmark = luigi.Parameter()
-    consistency_instance = luigi.Parameter()
+
+    # Should be of the form consistency_instance. For example:
+    # CT_mug-1-88-3
+    instance = luigi.Parameter()
+
+    def __init__(self, *args, **kwargs):
+        super(CopyBlackholeWebData, self).__init__(*args, **kwargs)
+        self.instance_name = "FinalMetricData_%s_%s" % (self.benchmark,
+                                                        self.instance)
+
+    def requires(self):
+        return FinalMetricData(benchmark=self.benchmark,
+                               instance=self.instance)
 
     def output(self):
-        blackhole_path = BlackholeConfig().blackhole_path
         return luigi.LocalTarget(
-            "%s/%s_tasks/copy_blackhole_web_data.success" % (os.path.join(
-                blackhole_path, self.benchmark), self.consistency_instance))
+            os.path.join(BlackholeConfig().blackhole_path, self.benchmark,
+                         "%s_tasks" % self.instance,
+                         "copy_blackhole_web_data.success"))
 
     def run(self):
         blackhole_path = BlackholeConfig().blackhole_path
         blackhole_web_path = BlackholeWebConfig().blackhole_web_path
 
-        tokens = self.consistency_instance.split('_')
+        tokens = self.instance.split('_')
         consistency = tokens[0]
         instance = "_".join(tokens[1:])
 
-        data_path = os.path.join(blackhole_path, self.benchmark,
-                                 self.consistency_instance)
+        data_path = os.path.join(blackhole_path, self.benchmark, self.instance)
         web_path = os.path.join(blackhole_web_path, self.benchmark, instance,
                                 consistency)
+        tasks_dir = os.path.join(blackhole_path, self.benchmark,
+                                 "%s_tasks" % self.instance)
 
         remote_path = '@' in web_path
 
@@ -36,28 +51,10 @@ class CopyBlackholeWebData(ShellTask):
 
         command += "rsync -aRm %s/./ %s --include='*/' --include='*.json' --include='static.db' --exclude='*'" % (
             data_path, web_path)
-        print("Running command: command")
         (returncode, stdout, stderr) = self.run_command(command)
 
-        base_path = "%s/%s_tasks" % (os.path.join(
-            blackhole_path, self.benchmark), self.consistency_instance)
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-
-        with open("%s/copy_blackhole_web_data.retcode" % base_path,
-                  'w') as out_file:
-            out_file.write(str(returncode))
-        with open("%s/copy_blackhole_web_data.out" % base_path,
-                  'w') as out_file:
-            out_file.write(stdout.decode("utf-8"))
-        with open("%s/copy_blackhole_web_data.err" % base_path,
-                  'w') as out_file:
-            out_file.write(stderr.decode("utf-8"))
-
-        if returncode > 0:
-            raise Exception(
-                "Received error code %s in CopyBlackholeWebData: %s" %
-                (returncode, blackhole_path))
+        self.record_output(tasks_dir, "copy_blackhole_web_data", returncode,
+                           stdout, stderr)
 
         with self.output().open('w') as out_file:
             out_file.write("1")

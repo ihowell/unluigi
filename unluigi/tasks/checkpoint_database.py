@@ -1,41 +1,35 @@
 import luigi
 import os
-from unl_luigi.config.blackhole import BlackholeConfig
-from unl_luigi.tasks.shell_task import ShellTask
+from unluigi.config.blackhole import BlackholeConfig
+from unluigi.tasks.shell_task import ShellTask
 
 
 class CheckpointDatabase(ShellTask):
-    database_path = luigi.Parameter()
+    benchmark = luigi.Parameter()
+    instance = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
         super(CheckpointDatabase, self).__init__(*args, **kwargs)
-        self.instance_name = "CheckpointDatabase_%s" % self.database_path
+        self.instance_name = "CheckpointDatabase_%s_%s" % (self.benchmark,
+                                                           self.instance)
 
     def output(self):
-        return luigi.LocalTarget(self.database_path +
-                                 "_tasks/checkpoint.success")
+        return luigi.LocalTarget(
+            os.path.join(BlackholeConfig().blackhole_path, self.benchmark,
+                         "%s_tasks" % self.instance, "checkpoint.success"))
 
     def run(self):
         blackhole_app_path = BlackholeConfig().blackhole_app
+        blackhole_path = os.path.join(BlackholeConfig().blackhole_path,
+                                      self.benchmark, self.instance)
+        tasks_dir = os.path.join(BlackholeConfig().blackhole_path,
+                                 self.benchmark, "%s_tasks" % self.instance)
+
         command = "%s -c crane_checkpoint { -d %s }" % (blackhole_app_path,
-                                                        self.database_path)
+                                                        blackhole_path)
         (returncode, stdout, stderr) = self.run_command(command)
-
-        base_path = "%s_tasks" % self.database_path
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-
-        with open("%s/checkpoint.retcode" % base_path, 'w') as out_file:
-            out_file.write(str(returncode))
-        with open("%s/checkpoint.out" % base_path, 'w') as out_file:
-            out_file.write(stdout.decode("utf-8"))
-        with open("%s/checkpoint.err" % base_path, 'w') as out_file:
-            out_file.write(stderr.decode("utf-8"))
-
-        if returncode > 0:
-            raise Exception(
-                "Received error code %s in CheckpointDatabase: %s" %
-                (returncode, self.database_path))
+        self.record_output(tasks_dir, "checkpoint", return_code, stdout,
+                           stderr)
 
         with self.output().open('w') as out_file:
             out_file.write("1")

@@ -3,7 +3,7 @@ chardet==3.0.4
 docutils==0.15.2
 idna==2.8
 lockfile==0.12.2
-luigi==2.8.9
+luigi[toml]==2.8.9
 python-daemon==2.1.2
 python-dateutil==2.8.0
 requests==2.22.0
