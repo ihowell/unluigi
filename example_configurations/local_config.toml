@@ -1,12 +1,16 @@
+[ExperimentConfig]
+experiment_dir = "/Users/ihowell/Projects/unluigi/experiment"
+experiment_name = "Test Experiment"
+
 [FooWorkflow]
-root_path = "/Users/ihowell/Data/test/"
+root_path = "/Users/ihowell/Data/test"
 
 
-[FooTask]
+[FooMonitorTask]
 foo_directory = "/Users/ihowell/Data/test/foo/"
 
 
-[BarTask]
+[BarMonitorTask]
 bar_directory = "/Users/ihowell/Data/test/bar/"
 
 

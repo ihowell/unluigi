@@ -1,20 +1,22 @@
 import luigi
 import os
-from unluigi.tasks.foo_task import FooTask
-from unluigi.tasks.shell_task import ShellTask
+from unluigi.tasks.foo_monitor_task import FooMonitorTask
 from unluigi.tasks.monitor import MonitorTask
+from unluigi.tasks.shell_task import ShellTask
 from unluigi.util.atomic_file_pointer import AtomicFilePointer
 
 
-class BarTask(ShellTask):
+class BarMonitorTask(ShellTask, MonitorTask):
     foo_path = luigi.Parameter()
-    foo_num = luigi.NumericalParameter(var_type=int,
-                                       min_value=0,
-                                       max_value=10000)
+    foo_num = luigi.IntParameter()
     bar_directory = luigi.Parameter()
 
+    def get_task_name(self):
+        return "BarMonitorTask " + str(self.foo_num)
+
     def requires(self):
-        return FooTask(foo_num=self.foo_num)
+        return FooMonitorTask(parent_id=self.get_task_id(),
+                              foo_num=self.foo_num)
 
     def output(self):
         return luigi.LocalTarget(

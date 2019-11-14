@@ -2,6 +2,8 @@ import luigi
 import argparse
 import importlib.util
 import os
+import unluigi.util.monitor_tools as monitor_tools
+from unluigi.config.experiment import ExperimentConfig
 from unluigi.util.parse_unknown_args import parse_cmdline_kwargs
 
 
@@ -20,7 +22,10 @@ def main():
     workflow = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(workflow)
 
-    print(extra_args)
+    # Initiate logging by retrieving an experiment_id
+    if ExperimentConfig().server_url is not None:
+        monitor_tools.retrieve_new_experiment_id()
+
     tasks = workflow.create_tasks(**extra_args)
     luigi.build(tasks, local_scheduler=True)
 
