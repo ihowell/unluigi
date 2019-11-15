@@ -24,13 +24,13 @@ def main():
 
     # Initiate logging by retrieving an experiment_id
     if ExperimentConfig().server_url is not None:
-        monitor_tools.retrieve_new_experiment_id()
-
-    tasks = workflow.create_tasks(**extra_args)
-    luigi.build(tasks, local_scheduler=True)
-
-    if ExperimentConfig().server_url is not None:
-        monitor_tools.complete_experiment()
+        with monitor_tools.ExperimentContext() as ctx:
+            tasks = workflow.create_tasks(**extra_args)
+            luigi.build(tasks, local_scheduler=True)
+            ctx.complete_experiment()
+    else:
+        tasks = workflow.create_tasks(**extra_args)
+        luigi.build(tasks, local_scheduler=True)
 
 
 if __name__ == '__main__':

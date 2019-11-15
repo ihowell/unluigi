@@ -1,5 +1,6 @@
 import luigi
 import os
+import time
 from unluigi.tasks.foo_monitor_task import FooMonitorTask
 from unluigi.tasks.monitor import MonitorTask
 from unluigi.tasks.shell_task import ShellTask
@@ -31,6 +32,8 @@ class BarMonitorTask(MonitorTask, ShellTask):
                 (returncode, stdout,
                  stderr) = self.ex("echo \"%d - bar\" > %s" %
                                    (self.foo_num, bar_file.tmp_path))
+
+                time.sleep(1)
 
                 if returncode > 0:
                     ctx.end_task(

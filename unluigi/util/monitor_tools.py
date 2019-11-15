@@ -5,26 +5,52 @@ import os
 from unluigi.config.experiment import ExperimentConfig
 
 
+class ExperimentContext:
+    def __enter__(self):
+        self.ended_experiment = False
+        self.experiment_id = self.retrieve_new_experiment_id()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if not self.ended_experiment:
+            self.complete_experiment(True)
+
+    def retrieve_new_experiment_id(self):
+        """Ensures that the task exists in the database and returns the id of
+        the task. If the task does not exist, returns null.
+
+        """
+        response = requests.post(
+            os.path.join(ExperimentConfig().server_url, 'api',
+                         'insert_experiment.php'),
+            json={'experiment_name': ExperimentConfig().experiment_name})
+
+        if response.status_code == 200:
+            path = get_experiment_id_path()
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path))
+            with open(path, 'w') as out_file:
+                json.dump(response.json(), out_file)
+            return response.json()['experiment_id']
+
+    def complete_experiment(self, canceled=False):
+        self.ended_experiment = True
+        body = {
+            'experiment_id': self.experiment_id,
+            'action': 'complete' if not canceled else 'canceled'
+        }
+        api_endpoint = os.path.join(ExperimentConfig().server_url, 'api',
+                                    'update_experiment.php')
+
+        response = requests.post(api_endpoint, json=body)
+
+        if response.status_code != 200:
+            warnings.warn(
+                "Warning: Was not able to update experiment to complete")
+
+
 def get_experiment_id_path():
     return os.path.join(ExperimentConfig().experiment_dir, 'experiment_id')
-
-
-def retrieve_new_experiment_id():
-    """Ensures that the task exists in the database and returns the id of
-    the task. If the task does not exist, returns null.
-
-    """
-    response = requests.post(
-        os.path.join(ExperimentConfig().server_url, 'api',
-                     'insert_experiment.php'),
-        json={'experiment_name': ExperimentConfig().experiment_name})
-
-    if response.status_code == 200:
-        path = get_experiment_id_path()
-        if not os.path.exists(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path))
-        with open(path, 'w') as out_file:
-            json.dump(response.json(), out_file)
 
 
 def erase_old_experiment_id():
@@ -42,17 +68,6 @@ def get_experiment_id():
     with open(path, 'r') as f:
         experiment_id = json.load(f)['experiment_id']
     return experiment_id
-
-
-def complete_experiment():
-    body = {'experiment_id': get_experiment_id(), 'action': 'complete'}
-    api_endpoint = os.path.join(ExperimentConfig().server_url, 'api',
-                                'update_experiment.php')
-
-    response = requests.post(api_endpoint, json=body)
-
-    if response.status_code != 200:
-        warnings.warn("Warning: Was not able to update experiment to complete")
 
 
 def ensure_task(task, root_task=False):
