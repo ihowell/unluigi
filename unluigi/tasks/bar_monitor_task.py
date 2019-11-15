@@ -6,7 +6,7 @@ from unluigi.tasks.shell_task import ShellTask
 from unluigi.util.atomic_file_pointer import AtomicFilePointer
 
 
-class BarMonitorTask(ShellTask, MonitorTask):
+class BarMonitorTask(MonitorTask, ShellTask):
     foo_path = luigi.Parameter()
     foo_num = luigi.IntParameter()
     bar_directory = luigi.Parameter()
@@ -24,15 +24,22 @@ class BarMonitorTask(ShellTask, MonitorTask):
                          "bar_%d_success.txt" % self.foo_num))
 
     def run(self):
-        with AtomicFilePointer(
-                os.path.join(self.bar_directory,
-                             "bar_%d.txt" % self.foo_num)).open() as bar_file:
-            (returncode, stdout, stderr) = self.ex(
-                "echo \"%d - bar\" > %s" % (self.foo_num, bar_file.tmp_path))
+        with self.get_monitor_context() as ctx:
+            with AtomicFilePointer(
+                    os.path.join(self.bar_directory, "bar_%d.txt" %
+                                 self.foo_num)).open() as bar_file:
+                (returncode, stdout,
+                 stderr) = self.ex("echo \"%d - bar\" > %s" %
+                                   (self.foo_num, bar_file.tmp_path))
 
-        if returncode > 0:
-            raise Exception("Received error code %s: %s -> %s" %
-                            (returncode, self.foo_path, self.bar_directory))
+                if returncode > 0:
+                    ctx.end_task(
+                        False,
+                        "Returncode: " + str(returncode) + "\n" + str(stderr))
+                    raise Exception(
+                        "Received error code %s: %s -> %s" %
+                        (returncode, self.foo_path, self.bar_directory))
 
-        with self.output().open('w') as out_file:
-            out_file.write("1")
+            ctx.end_task(True, stdout.decode('utf-8'))
+            with self.output().open('w') as out_file:
+                out_file.write("1")

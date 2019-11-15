@@ -3,7 +3,6 @@ import warnings
 import json
 import os
 from unluigi.config.experiment import ExperimentConfig
-from unluigi.util.flatten import flatten
 
 
 def get_experiment_id_path():
@@ -45,6 +44,17 @@ def get_experiment_id():
     return experiment_id
 
 
+def complete_experiment():
+    body = {'experiment_id': get_experiment_id(), 'action': 'complete'}
+    api_endpoint = os.path.join(ExperimentConfig().server_url, 'api',
+                                'update_experiment.php')
+
+    response = requests.post(api_endpoint, json=body)
+
+    if response.status_code != 200:
+        warnings.warn("Warning: Was not able to update experiment to complete")
+
+
 def ensure_task(task, root_task=False):
     """Ensures that the task exists in the database and returns the id of
     the task. If the task does not exist and cannot be created, returns None.
@@ -68,5 +78,52 @@ def ensure_task(task, root_task=False):
 
     if response.status_code != 200:
         warnings.warn("Warning: Was not able to ensure task")
-    print(response.text)
     return response.json()['task_id'] if response.status_code == 200 else None
+
+
+def send_task_began(task_id):
+    body = {'task_id': task_id, 'action': 'begin'}
+    api_endpoint = os.path.join(ExperimentConfig().server_url, 'api',
+                                'update_task.php')
+
+    response = requests.post(api_endpoint, json=body)
+    if response.status_code != 200:
+        warnings.warn("Unsuccessful in updating task %d to the begin state" %
+                      task_id)
+
+
+def send_task_succeeded(task_id, output):
+    send_task_completed(task_id, True, output)
+
+
+def send_task_failed(task_id, error):
+    send_task_completed(task_id, False, error)
+
+
+def send_task_completed(task_id, succeeded, output_or_error):
+    body = {
+        'task_id': task_id,
+        'action': 'end',
+        'succeeded': succeeded,
+        'output_or_error': output_or_error
+    }
+    api_endpoint = os.path.join(ExperimentConfig().server_url, 'api',
+                                'update_task.php')
+
+    response = requests.post(api_endpoint, json=body)
+    if response.status_code != 200:
+        warnings.warn(
+            "Unsuccessful in updating task %d to the %s completed state" %
+            (task_id, 'success' if succeeded else 'failed'))
+
+
+def send_found_task_completed(task_id):
+    body = {'task_id': task_id, 'action': 'found_completed'}
+    api_endpoint = os.path.join(ExperimentConfig().server_url, 'api',
+                                'update_task.php')
+
+    response = requests.post(api_endpoint, json=body)
+    if response.status_code != 200:
+        warnings.warn(
+            "Unsuccessful in updating task %d to the found completed state" %
+            task_id)

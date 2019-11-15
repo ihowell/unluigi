@@ -4,7 +4,7 @@ from unluigi.tasks.bar_monitor_task import BarMonitorTask
 from unluigi.tasks.monitor import MonitorExperiment, MonitorTask
 
 
-class FooWorkflow(luigi.WrapperTask, MonitorTask):
+class FooWorkflow(MonitorTask, luigi.WrapperTask):
     root_path = luigi.Parameter()
     foo_num = luigi.IntParameter()
 
@@ -26,14 +26,14 @@ class FooWorkflow(luigi.WrapperTask, MonitorTask):
                               parent_id=self.get_task_id())
 
 
-class Experiment(luigi.WrapperTask, MonitorExperiment):
+class Experiment(MonitorExperiment, luigi.WrapperTask):
     def get_task_name(self):
         return "Experiment"
 
     def requires(self):
         return [
             FooWorkflow(foo_num=i, parent_id=self.get_task_id())
-            for i in range(5)
+            for i in range(1)
         ]
 
 

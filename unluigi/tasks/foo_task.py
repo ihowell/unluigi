@@ -6,9 +6,7 @@ from unluigi.tasks.shell_task import ShellTask
 
 class FooTask(ShellTask):
     foo_directory = luigi.Parameter()
-    foo_num = luigi.NumericalParameter(var_type=int,
-                                       min_value=0,
-                                       max_value=10000)
+    foo_num = luigi.IntParameter()
 
     def output(self):
         return luigi.LocalTarget(

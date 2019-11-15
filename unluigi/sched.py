@@ -29,6 +29,9 @@ def main():
     tasks = workflow.create_tasks(**extra_args)
     luigi.build(tasks, local_scheduler=True)
 
+    if ExperimentConfig().server_url is not None:
+        monitor_tools.complete_experiment()
+
 
 if __name__ == '__main__':
     main()
