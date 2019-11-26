@@ -27,6 +27,8 @@ if ($action === 'begin') {
     $succeeded = $input['succeeded'];
     $output_or_error = SQLite3::escapeString($input['output_or_error']);
     $service->end_task($task_id, $succeeded, $output_or_error);
+} else if ($action == 'found_completed') {
+    $service->found_task_completed($task_id);
 } else if ($action === 'cancel') {
     $service->cancel_task($task_id);
 } else {

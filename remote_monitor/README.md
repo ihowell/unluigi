@@ -45,6 +45,19 @@ Passing in this field will fetch only the tasks that have been updated since you
 This endpoint will return the id of the newly added experiment.
 
 
+### Update Experiment
+
+* Navigation: `/api/update_experiment.php`
+
+* Usage: Once an experiment has been inserted it is assumed to have begun. There are two ways to stop an experiment and indicate it's success state. Either pass `complete` or `canceled` as the action to the endpoint:
+```
+{
+    "experiment_id": 1,
+    "action": "complete"
+}
+```
+
+
 ### Insert Task
 
 * Navigation: `/api/insert_task.php`
@@ -54,6 +67,7 @@ This endpoint will return the id of the newly added experiment.
 {
     "task_name": "Root Task Name",
     "task_class": "root_task_class", //< This is just an example. It can be named anything
+    "task_params": "{\"json\": \"string of the parameters of the task\"}",
     "root_task": true,
     "experiment_id": 1
 }
@@ -63,6 +77,7 @@ If adding a worker task, send this body instead:
 {
     "task_name": "Root Task Name",
     "task_class": "root_task_class", //< This is just an example. It can be named anything
+    "task_params": "{\"json\": \"string of the parameters of the task\"}",
     "root_task": false,
     "parent_task_id": 1
 }
@@ -95,6 +110,13 @@ You use the `end` action to mark a task either as succeeded or failed and provid
 {
     "task_id": 1,
     "action": "cancel"
+}
+```
+Further, if a task has been found to have already been completed (possibly by another task or the current task is rerunning only a subset of the previous tasks), then use the action `found_completed` like so:
+```
+{
+    "task_id": 1,
+    "action": "found_completed"
 }
 ```
 

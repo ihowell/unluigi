@@ -20,6 +20,8 @@ class LuigiRepository {
                         . " name varchar(256),"
                         . " root_task_id int,"
                         . " created timestamp not null,"
+                        . " completed timestamp,"
+                        . " status varchar(32),"
                         . " last_updated timestamp not null)");
 
         $this->db->exec("create table if not exists Task"
@@ -27,6 +29,7 @@ class LuigiRepository {
                         . " experiment_id int not null,"
                         . " name varchar(512) not null,"
                         . " task_class varchar(256) not null,"
+                        . " task_params text,"
                         . " status varchar(16) not null,"
                         . " start_time timestamp,"
                         . " end_time timestamp,"
@@ -70,6 +73,55 @@ class LuigiRepository {
         return $res->fetchArray(SQLITE3_NUM)[0];
     }
 
+    function complete_experiment($experiment_id, $canceled = FALSE) {
+        $timestamp = (new DateTime())->format('Y-m-d H:i:s.u');
+
+        $smt = $this->db->prepare("select count(task_id) from Task where experiment_id=:experiment_id and status in (\"failed\", \"canceled\")");
+        $smt->bindValue(':experiment_id', $experiment_id);
+        $res = $smt->execute();
+        $num_tasks_failed = $res->fetchArray(SQLITE3_NUM)[0];
+
+        $succeeded = ($num_tasks_failed == 0);
+
+        if ($succeeded and !$canceled) {
+            // Update pending to succeeded
+            $smt = $this->db->prepare("update Task set output_or_error=\"\", last_updated=:timestamp, status=\"succeeded\" where experiment_id=:experiment_id and status=\"pending\"");
+            $smt->bindValue(':timestamp', $timestamp);
+            $smt->bindValue(':experiment_id', $experiment_id);
+            $smt->execute();
+        } else {
+            // Update pending to canceled
+            $smt = $this->db->prepare("update Task set output_or_error=\"\", last_updated=:timestamp, status=\"canceled\" where experiment_id=:experiment_id and status=\"pending\"");
+            $smt->bindValue(':timestamp', $timestamp);
+            $smt->bindValue(':experiment_id', $experiment_id);
+            $smt->execute();
+
+            // Update inprogress to canceled and set end time
+            $smt = $this->db->prepare("update Task set output_or_error=\"\", last_updated=:timestamp, status=\"canceled\", end_time=:timestamp where experiment_id=:experiment_id and status=\"inprogress\"");
+            $smt->bindValue(':timestamp', $timestamp);
+            $smt->bindValue(':experiment_id', $experiment_id);
+            $smt->execute();
+        }
+
+        $status = "";
+        if ($canceled) {
+            $status = "canceled";
+        } else {
+            if ($succeeded)
+                $status = "succeeded";
+            else
+                $status = "failed";
+        }
+
+
+        $smt = $this->db->prepare("update Experiment set completed=:completed, status=:status where experiment_id=:experiment_id");
+        $smt->bindValue(':experiment_id', $experiment_id);
+        $smt->bindValue(':completed', $timestamp);
+        $smt->bindValue(':status', $status);
+        $res = $smt->execute();
+    }
+
+
     function get_experiments() {
         $res = $this->db->query("select * from Experiment");
         $experiments = [];
@@ -107,19 +159,20 @@ class LuigiRepository {
         $smt->execute();
     }
 
-    function insert_task($experiment_id, $name, $task_class, $status, $start_time, $end_time, $output_or_error) {
+    function insert_task($experiment_id, $name, $task_class, $task_params, $status, $start_time, $end_time, $output_or_error) {
         $timestamp = (new DateTime())->format('Y-m-d H:i:s.u');
         $this->db->exec("BEGIN;");
 
-        $insert_smt = $this->db->prepare("insert into Task (experiment_id, name, task_class, status, start_time,"
+        $insert_smt = $this->db->prepare("insert into Task (experiment_id, name, task_class, task_params, status, start_time,"
                                   . " end_time, output_or_error, last_updated) values(:experiment_id,"
-                                  . " :name, :task_class, :status, :start_time, :end_time,"
+                                  . " :name, :task_class, :task_params, :status, :start_time, :end_time,"
                                   . " :output_or_error, :timestamp)");
         $row_id_smt = $this->db->prepare("select last_insert_rowid();");
 
         $insert_smt->bindValue(':experiment_id', $experiment_id);
         $insert_smt->bindValue(':name', $name);
         $insert_smt->bindValue(':task_class', $task_class);
+        $insert_smt->bindValue(':task_params', $task_params);
         $insert_smt->bindValue(':status', $status);
         $insert_smt->bindValue(':start_time', $start_time);
         $insert_smt->bindValue(':end_time', $end_time);
@@ -161,6 +214,19 @@ class LuigiRepository {
     function get_task_experiment_id($task_id) {
         $smt = $this->db->prepare("select experiment_id from Task where task_id=:task_id");
         $smt->bindValue(':task_id', $task_id);
+        $res = $smt->execute();
+        $res = $res->fetchArray(SQLITE3_NUM);
+        if ($res === FALSE)
+            return FALSE;
+        return $res[0];
+    }
+
+    function get_equivalent_task_id($experiment_id, $name, $task_class, $task_params) {
+        $smt = $this->db->prepare("select task_id from Task where experiment_id=:experiment_id and name=:name and task_class=:task_class and task_params=:task_params");
+        $smt->bindValue(':experiment_id', $experiment_id);
+        $smt->bindValue(':name', $name);
+        $smt->bindValue(':task_class', $task_class);
+        $smt->bindValue(':task_params', $task_params);
         $res = $smt->execute();
         $res = $res->fetchArray(SQLITE3_NUM);
         if ($res === FALSE)
@@ -225,23 +291,20 @@ class LuigiRepository {
     }
 
     function get_all() {
-        echo("Experiments<br>");
+        $all = ['experiments' => [], 'tasks' => [], 'task_dependencies' => []];
+
         $res = $this->db->query("select * from Experiment");
         while($r = $res->fetchArray(SQLITE3_ASSOC)) {
-            var_dump($r);
-            echo("<br>");
+            array_push($all['experiments'], $r);
         }
-        echo("<br>Tasks<br>");
         $res = $this->db->query("select * from Task");
         while($r = $res->fetchArray(SQLITE3_ASSOC)) {
-            var_dump($r);
-            echo("<br>");
+            array_push($all['tasks'], $r);
         }
-        echo("<br>TaskDependencies<br>");
         $res = $this->db->query("select * from TaskDependency");
         while($r = $res->fetchArray(SQLITE3_ASSOC)) {
-            var_dump($r);
-            echo("<br>");
+            array_push($all['task_dependencies'], $r);
         }
+        return $all;
     }
 }

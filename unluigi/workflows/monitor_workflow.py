@@ -33,7 +33,7 @@ class Experiment(MonitorExperiment, luigi.WrapperTask):
     def requires(self):
         return [
             FooWorkflow(foo_num=i, parent_id=self.get_task_id())
-            for i in range(1)
+            for i in range(5)
         ]
 
 

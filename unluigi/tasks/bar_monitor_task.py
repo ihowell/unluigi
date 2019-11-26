@@ -33,7 +33,8 @@ class BarMonitorTask(MonitorTask, ShellTask):
                  stderr) = self.ex("echo \"%d - bar\" > %s" %
                                    (self.foo_num, bar_file.tmp_path))
 
-                time.sleep(1)
+                # raise Exception("Stupid exception")
+                time.sleep(10000)
 
                 if returncode > 0:
                     ctx.end_task(

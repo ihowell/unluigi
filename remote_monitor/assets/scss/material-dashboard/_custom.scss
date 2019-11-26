@@ -1,0 +1,28 @@
+.nav-item:hover {
+    color: #333;
+}
+
+.sidebar .nav i.material-icons.succeeded,
+.sidebar .nav i.material-icons-outlined.succeeded{
+    color: $green-600;
+}
+
+.sidebar .nav i.material-icons.failed,
+.sidebar .nav i.material-icons-outlined.failed {
+    color: $red-600;
+}
+
+.sidebar .nav i.material-icons.canceled,
+.sidebar .nav i.material-icons-outlined.canceled{
+    color: $orange-600;
+}
+
+.sidebar .nav i.material-icons.inprogress,
+.sidebar .nav i.material-icons-outlined.inprogress {
+    color: $light-blue-600;
+}
+
+.sidebar .nav li.active > a i.material-icons,
+.sidebar .nav li.active > a i.material-icons-outlined {
+    color: $white;
+}

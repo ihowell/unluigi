@@ -1,0 +1,29 @@
+#chart-area svg {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+#logo {
+    height:50px;
+}
+
+.navbar-brand {
+    height: 60px;
+    padding: 5px 0px;
+}
+
+.scroll-view-dual-pane {
+    display: flex;
+}
+
+.scroll-view-dual-pane>.scroll-area {
+    flex-shrink: 0;
+}
+
+.tasks-list, .workflows-list, .classes-list {
+    max-height: 380px;
+    overflow-y: scroll;
+    flex-wrap: nowrap;
+    padding: 0 1rem;
+}

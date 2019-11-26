@@ -25,6 +25,11 @@ class LuigiService {
         return $this->repo->insert_experiment($name, -1, $created_timestamp);
     }
 
+    function complete_experiment($experiment_id, $canceled = FALSE) {
+        $this->repo->complete_experiment($experiment_id, $canceled);
+        $this->repo->update_experiment_timestamp($experiment_id);
+    }
+
     function get_experiments() {
         return $this->repo->get_experiments();
     }
@@ -33,24 +38,32 @@ class LuigiService {
         return $this->repo->delete_experiment($experiment_id);
     }
 
-    function insert_root_task($experiment_id, $name, $task_class, $status, $start_time, $end_time, $output_or_error) {
+    function insert_root_task($experiment_id, $name, $task_class, $task_params, $status, $start_time, $end_time, $output_or_error) {
         if (!$this->repo->check_experiment_exists_by_id($experiment_id)) {
             die("Experiment with id " . $experiment_id . " does not exist.");
             return;
         }
-        $task_id = $this->repo->insert_task($experiment_id, $name, $task_class, $status, $start_time, $end_time, $output_or_error);
+        $task_id = $this->repo->insert_task($experiment_id, $name, $task_class, $task_params, $status, $start_time, $end_time, $output_or_error);
         $this->repo->update_experiment_root_task_id($experiment_id, $task_id);
         return $task_id;
     }
 
-    function insert_worker_task($parent_id, $name, $task_class, $status, $start_time, $end_time, $output_or_error) {
+    function insert_worker_task($parent_id, $name, $task_class, $task_params, $status, $start_time, $end_time, $output_or_error) {
         $experiment_id = $this->repo->get_task_experiment_id($parent_id);
         if ($experiment_id === FALSE) {
             die("Parent task with id " . $parent_id . " does not exist.");
         }
-        $task_id = $this->repo->insert_task($experiment_id, $name, $task_class, $status, $start_time, $end_time, $output_or_error);
+        $task_id = $this->repo->insert_task($experiment_id, $name, $task_class, $task_params, $status, $start_time, $end_time, $output_or_error);
         $this->repo->insert_task_dependency($parent_id, $task_id);
         return $task_id;
+    }
+
+    /**
+     * Returns either the task_id if the task with given parameters
+     * exists in the database or False if it does not.
+     */
+    function get_equivalent_task_id($experiment_id, $name, $task_class, $task_params) {
+        return $this->repo->get_equivalent_task_id($experiment_id, $name, $task_class, $task_params);
     }
 
     function begin_task($task_id) {
@@ -65,6 +78,11 @@ class LuigiService {
         else
             $status = "failed";
         $this->repo->update_task_attributes($task_id, $status, NULL, format_datetime(new DateTime()), $output_or_error);
+        $this->repo->update_task_timestamp($task_id);
+    }
+
+    function found_task_completed($task_id) {
+        $this->repo->update_task_attributes($task_id, "found_completed", NULL, NULL, $output_or_error);
         $this->repo->update_task_timestamp($task_id);
     }
 
@@ -87,7 +105,7 @@ class LuigiService {
     }
 
     function get_all() {
-        $this->repo->get_all();
+        return $this->repo->get_all();
     }
 }
 ?>

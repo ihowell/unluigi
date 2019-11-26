@@ -1,83 +1,80 @@
 <!doctype html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta name="description" content="">
-    <title>Star Break Coffee</title>
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <!-- Custom styling -->
-    <link rel="stylesheet" href="css/style.css">
-    <meta charset="utf-8">
-    <title>Tree Example</title>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="">
+        <title>Star Break Coffee</title>
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <!-- Custom styling -->
+        <link rel="stylesheet" href="css/style.css">
+        <meta charset="utf-8">
+        <title>Tree Example</title>
 
-    <style>
-    .node {
-        cursor: pointer;
-    }
-    .node circle {
-      fill: #fff;
-      stroke: steelblue;
-      stroke-width: 3px;
-    }
-    .node text {
-      font: 12px sans-serif;
-    }
-    .link {
-      fill: none;
-      stroke: #ccc;
-      stroke-width: 2px;
-    }
-    </style>
+        <style>
+         .node {
+             cursor: pointer;
+         }
+         .node circle {
+             fill: #fff;
+             stroke: steelblue;
+             stroke-width: 3px;
+         }
+         .node text {
+             font: 12px sans-serif;
+         }
+         .link {
+             fill: none;
+             stroke: #ccc;
+             stroke-width: 2px;
+         }
 
+        </style>
+    </head>
 
+    <body>
+        <nav class="navbar navbar-default" style="background-color: #878f99;">
+            <div class="container">
+                <a class="navbar-brand" href="#"><img id="logo" src="img/luigi.png"></a>
+            </div>
+            </div>
+        </nav>
 
-
-</head>
-
-<body>
-
-
-
-    <nav class="navbar navbar-default" style="background-color: #878f99;">
+        <!-- Bootstrap grid setup -->
         <div class="container">
-            <a class="navbar-brand" href="#"><img id="logo" src="img/luigi.png"></a>
+            <div class="row">
+                <div class="col-md-2" style="border:1px solid #333" id="listing">
+                    Currently Running Jobs:
+                </div>
+                <div class="col-md-10" style="border:1px solid #333" id="chart-area"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-2" style="border:1px solid #333" id="info">
+                    Information:
+                </div>
+                <div class="col-md-10" style="border:1px solid #333" id="info_detail">
+                    "task_id":1,"experiment_id":1,"name":"Root Task","task_class":"scheduler","status":"Pending","start_time":null,"end_time":null,"output_or_error":null,"last_updated":"2019-10-31 16:07:01.992051","dependencies":[2,5,8]
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2" style="border:1px solid #333" id="static">
+                    Statics
+                </div>
+                <div class="col-md-10" style="border:1px solid #333" id="chart-histogram"></div>
             </div>
         </div>
-    </nav>
 
-    <!-- Bootstrap grid setup -->
-    <div class="container">
-        <div class="row">
-            <div class="col-md-2" id="listing">
-                Currently Running Jobs:
-            </div>
-            <div class="col-md-10" id="chart-area"></div>
-        </div>
-    </div>
+        <!-- External JS libraries -->
+        <!--
+             <script src="js/d3.min.js"></script>
+        -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+        <!--
+             <script src="https://d3js.org/d3.v4.min.js"></script>
+        -->
+        <!-- Custom JS -->
+        <script src="/assets/js/TreeModel.js"></script>
+        <script src="/assetts/js/main.js"></script>
 
-    
-
-
-<!-- External JS libraries -->
-<!--
-<script src="js/d3.min.js"></script>
--->
-<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-<!--
-<script src="http://d3js.org/d3.v3.min.js"></script>
--->
-<!-- Custom JS -->
-<script src="js/main.js"></script>
-
-</body>
+    </body>
 </html>
-
-
-
-
-
-
-
-
-

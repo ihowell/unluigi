@@ -1,0 +1,1 @@
+{"class": "BarTask", "params": {"foo_path": "/Users/ihowell/Data/test/foo/foo_%s.txt", "foo_num": "4", "bar_directory": "/Users/ihowell/Data/test/bar/"}, "requires": {"FooTask": {"foo_directory": "/Users/ihowell/Data/test/foo/", "foo_num": "4"}}}
