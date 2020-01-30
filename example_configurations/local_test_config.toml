@@ -1,0 +1,27 @@
+[ExperimentConfig]
+experiment_dir = "/Users/ihowell/Projects/unluigi/experiment"
+experiment_name = "Test Experiment"
+server_url = "https://cse.unl.edu/~ihowell/crane/"
+
+
+[TestConfig]
+output_dir = "/Users/ihowell/Data/test_dir"
+
+
+[core]
+workers = 3
+
+
+[SlurmConfig]
+jobname = "luigi-job"
+runmode = "runmode_local"
+group_name = "{group_name}"
+partition = "batch"
+cores = 1
+time = "7200"
+threads = 1
+
+
+[ShellConfig]
+tmp_path_prefix = "./"
+keep_tmp_files = false
