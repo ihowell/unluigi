@@ -109,6 +109,8 @@ class SlurmTask(luigi.task.Task):
 
     def cancel_container_job(self):
         job_id = get_jobname(self)
+        log.debug('Canceling job ' + job_id + 'for task: ' + self.task_family +
+                  " " + str(self.to_str_params()))
         args = ['/usr/bin/squeue', '-h', '-o', '%i,%t', '-j', job_id]
         slurm_q = subprocess.run(args,
                                  stdout=subprocess.PIPE,
