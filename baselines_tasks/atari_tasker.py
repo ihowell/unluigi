@@ -1,35 +1,32 @@
 import luigi
 import functools
 import itertools
-from unl_luigi.tasks import slurm
+from unluigi.tasks import slurm
 import json
+import random
 
-from baselines_tasks.train_task import TrainTask
+from baselines_tasks.train_task import TrainTask, EvalTask
 
 PREAMBLE_PATH = "/Users/equint/Documents/GitHub/unl-luigi/baselines_tasks/local_preamble.sh"
-
 
 def create_tasks():
     # per-task info
     env_type = ['atari']
-    env = ['Seaquest', 'SpaceInvader']
-    constraint = ['', '1d_dithering', '1d_actuation']
-    reward_shaping = [0, -1, -10, -100, -1000]
-    augmentation = ['', 'constraint_state', 'action_history']
-    seed = [7842]
+    env = ['Breakout', 'SpaceInvaders']
+    constraint = ['1d_dithering2', '1d_actuation4']
+    reward_shaping = [0, -0.0025, -0.005, -0.01]
+    augmentation = ['', 'constraint_state', 'constraint_state_noembed', 'action_history']
+    train_seed = [7842, 1206]
+    eval_seed = [5722, 2579, 1892, 7583, 9238]
     arg_names = [
         'env_type', 'env', 'constraint', 'reward_shaping', 'augmentation',
-        'seed'
-    ]
-    args = [
-        dict(zip(arg_names, arg_vals)) for arg_vals in itertools.product(
-            env_type, env, constraint, reward_shaping, augmentation, seed)
+        'train_seed', 'eval_seed'
     ]
 
-    return [
-        TrainTask(preamble_path=PREAMBLE_PATH,
-                  platform='crane',
-                  tmp_path='./',
-                  keep_tmp_files=False,
-                  **a) for a in args
+    args = [
+        dict(zip(arg_names, arg_vals)) for arg_vals in itertools.product(
+            env_type, env, constraint, reward_shaping, augmentation, train_seed, eval_seed)
     ]
+    tasks = [EvalTask(**a) for a in args]
+    random.shuffle(tasks)
+    return tasks

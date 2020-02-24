@@ -32,10 +32,13 @@ class SlurmConfig(luigi.Config):
     group_name = luigi.Parameter(default=None)
     partition = luigi.Parameter(default=None)
     cores = luigi.IntParameter(default=1)
+    mem = luigi.Parameter(default=None)
     time = luigi.Parameter(default=None)
     jobname = luigi.Parameter(default=None)
     threads = luigi.IntParameter(default=1)
     gres = luigi.Parameter(default=None)
+    stdout = luigi.Parameter(default=None)
+    stderr = luigi.Parameter(default=None)
 
 
 # ================================================================================
@@ -57,8 +60,14 @@ def get_argstr_hpc():
         salloc_argstr += '-t {t} '.format(t=config.time)
     if config.gres is not None:
         salloc_argstr += '--gres={} '.format(config.gres)
+    if config.mem is not None:
+        salloc_argstr += '--mem={} '.format(config.mem)
 
     srun_argstr = ' srun -n 1 -c {thr} '.format(thr=config.threads)
+    if config.stdout is not None:
+        srun_argstr += '-o {} '.format(config.stdout)
+    if config.stderr is not None:
+        srun_argstr += '-e {} '.format(config.stderr)
     return salloc_argstr + srun_argstr
 
 
@@ -219,4 +228,4 @@ class SlurmTask(luigi.task.Task):
                                            tobj.tm_hour).total_seconds())
 
                 log.info('Slurm execution time for task %s was %ss',
-                         self.instance_name, self.slurm_exectime_sec)
+                         str(self), self.slurm_exectime_sec)

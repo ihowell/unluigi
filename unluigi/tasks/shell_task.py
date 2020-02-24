@@ -36,7 +36,7 @@ class ShellTask(slurm.SlurmTask):
 
         prefix = None
         if config.tmp_path_prefix is not None:
-            prefix = '%s/' % config.tmp_path_prefix
+            prefix = '%s/' % config.tmp_path_prefix if config.tmp_path_prefix[-1] != '/' else config.tmp_path_prefix
             if not os.path.exists(prefix):
                 os.makedirs(prefix)
 
