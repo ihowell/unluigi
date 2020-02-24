@@ -9,10 +9,7 @@ keep_tmp_files = false
 
 
 [SlurmConfig]
-jobname = "luigi-job"
-runmode = "runmode_hpc"
+log_dir = "/Users/ihowell/"
 group_name = "{group_name}"
 partition = "batch"
-cores = 1
-time = "7200"
-threads = 1
+jobname = "gaps-job"
