@@ -192,7 +192,7 @@ class SlurmTask(luigi.task.Task):
         if isinstance(command, list):
             command = sub.list2cmdline(command)
 
-        fullcommand = 'salloc %s %s' % (get_argstr_hpc(), command)
+        fullcommand = 'salloc %s %s' % (get_argstr_hpc(self), command)
         print("Full hpc command: %s" % fullcommand)
         (retcode, stdout, stderr) = self.ex_local(fullcommand)
 
@@ -206,7 +206,7 @@ class SlurmTask(luigi.task.Task):
         if isinstance(command, list):
             command = sub.list2cmdline(command)
 
-        fullcommand = 'salloc %s %s' % (get_argstr_mpi(), command)
+        fullcommand = 'salloc %s %s' % (get_argstr_mpi(self), command)
         (retcode, stdout, stderr) = self.ex_local(fullcommand)
 
         self.log_slurm_info(stderr)
