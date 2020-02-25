@@ -45,7 +45,7 @@ def serialize_task_list(task_list):
         task_obj = {}
         cls = task.__class__
 
-        task_obj['file'] = inspect.getmodule(cls).__file__
+        task_obj['file'] = os.path.abspath(inspect.getmodule(cls).__file__)
         task_obj['class'] = cls.__name__
         task_obj['params'] = task.to_str_params()
         output_obj.append(task_obj)
