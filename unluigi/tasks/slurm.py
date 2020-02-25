@@ -107,7 +107,7 @@ class SlurmTask(luigi.task.Task):
         self.register_on_failure(self.cancel_container_job)
         self.register_on_success(self.cancel_container_job)
 
-    def cancel_container_job(self):
+    def cancel_container_job(self, *args):
         job_id = get_jobname(self)
         log.debug('Canceling job ' + job_id + 'for task: ' + self.task_family +
                   " " + str(self.to_str_params()))
@@ -135,9 +135,9 @@ class SlurmTask(luigi.task.Task):
     def register_on_failure(self, f):
         self.on_failure_hooks.append(f)
 
-    def on_failure(self):
+    def on_failure(self, exception):
         for hook in self.on_failure_hooks:
-            hook()
+            hook(exception)
 
     # Main Execution methods
     def ex(self, command):
