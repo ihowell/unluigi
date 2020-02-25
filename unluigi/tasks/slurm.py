@@ -120,7 +120,7 @@ class SlurmTask(luigi.task.Task):
         job_id = get_jobname(self)
         log.debug('Canceling job ' + job_id + 'for task: ' + self.task_family +
                   " " + str(self.to_str_params()))
-        args = ['/usr/bin/squeue', '-h', '-o', '%i,%t', '-j', job_id]
+        args = ['/usr/bin/squeue', '-h', '-o', '%j,%t', '-n', job_id]
         slurm_q = subprocess.run(args,
                                  stdout=subprocess.PIPE,
                                  universal_newlines=True,
@@ -131,7 +131,7 @@ class SlurmTask(luigi.task.Task):
             running_ids.append(split[0].strip())
 
         if job_id in running_ids:
-            args = ['/usr/bin/scancel', job_id]
+            args = ['/usr/bin/scancel', '-n', job_id]
             subprocess.run(args, stdout=subprocess.PIPE, check=True)
 
     def register_on_success(self, f):
