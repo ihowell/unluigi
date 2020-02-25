@@ -46,21 +46,21 @@ class SchedulerTest(parameterized.TestCase):
         scheduler = gaps.scheduler.Scheduler(self.task_list)
         scheduler._build_dag_tree()
 
-        depends_3_key = Scheduler.task_key(DependsTask(txt="3"))
-        basic_31_key = Scheduler.task_key(BasicTask(txt="31"))
-        basic_32_key = Scheduler.task_key(BasicTask(txt="32"))
-
         self.assertTrue(BasicTask(txt="1") in scheduler.frontier_tasks)
         self.assertTrue(BasicTask(txt="2") in scheduler.frontier_tasks)
         self.assertTrue(BasicTask(txt="31") in scheduler.frontier_tasks)
         self.assertTrue(BasicTask(txt="32") in scheduler.frontier_tasks)
 
-        self.assertTrue(depends_3_key in scheduler.depends_on)
-        self.assertTrue(basic_31_key in scheduler.depends_on[depends_3_key])
-        self.assertTrue(basic_32_key in scheduler.depends_on[depends_3_key])
+        depends_3 = self.task_list[2]
+        basic_31 = BasicTask(txt="31")
+        basic_32 = BasicTask(txt="32")
 
-        self.assertTrue(basic_31_key in scheduler.depended_by)
-        self.assertTrue(depends_3_key in scheduler.depended_by[basic_31_key])
+        self.assertTrue(depends_3 in scheduler.depends_on)
+        self.assertTrue(basic_31 in scheduler.depends_on[depends_3])
+        self.assertTrue(basic_32 in scheduler.depends_on[depends_3])
 
-        self.assertTrue(basic_32_key in scheduler.depended_by)
-        self.assertTrue(depends_3_key in scheduler.depended_by[basic_32_key])
+        self.assertTrue(basic_31 in scheduler.depended_by)
+        self.assertTrue(depends_3 in scheduler.depended_by[basic_31])
+
+        self.assertTrue(basic_32 in scheduler.depended_by)
+        self.assertTrue(depends_3 in scheduler.depended_by[basic_32])

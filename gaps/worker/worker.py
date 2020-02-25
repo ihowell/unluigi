@@ -51,6 +51,11 @@ class Worker(abc.ABC):
         """Create a worker of a given type from the factory"""
         return Worker.worker_mapping[type_s](*args, **kwargs)
 
+    @staticmethod
+    def get_worker_types():
+        """Retrieve all worker types"""
+        return Worker.worker_mapping.keys()
+
     def __init__(self, task_list, *args, **kwargs):
         """Setups up a worker
 

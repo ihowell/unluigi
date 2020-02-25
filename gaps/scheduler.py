@@ -1,4 +1,6 @@
 import time
+import logging
+import gaps
 
 import gaps.task_status as task_status
 
@@ -7,9 +9,18 @@ from gaps.worker import Worker, SlurmWorker
 from gaps.tools.ordered_set import OrderedSet
 from gaps.tools.partition import partition_list
 
+logger = logging.getLogger('gaps-interface')
+
 
 class TaskException(Exception):
     pass
+
+
+class scheduler(gaps.Config):
+    poll_interval = gaps.FloatParameter(default=0.1)
+    max_workers = gaps.IntParameter(default=1)
+    worker_type = gaps.ChoiceParameter(choices=Worker.get_worker_types(),
+                                       default='basic')
 
 
 class Scheduler:
@@ -21,7 +32,7 @@ class Scheduler:
     updates and schedule new tasks.
 
     """
-    def __init__(self, task_list, max_workers=1, worker_type="basic"):
+    def __init__(self, task_list, worker_type=None):
         """Initialize the scheduler with a given list of tasks to run.
 
         Args:
@@ -32,12 +43,7 @@ class Scheduler:
         self.frontier_tasks = OrderedSet()
         self.depends_on = {}
         self.depended_by = {}
-        self.max_workers = max_workers
         self.worker_type = worker_type
-
-    @staticmethod
-    def task_key(task):
-        return (task.__class__, tuple(task.to_str_params().items()))
 
     def _build_dag_tree(self):
         task_list = list(filter(lambda x: not x.complete(), self.task_list))
@@ -45,27 +51,29 @@ class Scheduler:
         while len(task_list) > 0:
             task = task_list.pop()
 
-            task_key = self.task_key(task)
+            # task_key = self.task_key(task)
             requirements = flatten(task.requires())
             task_dependencies_completed = True
-            for r in requirements:
-                if not isinstance(r, Task):
-                    raise TaskException("Requirement " + str(r) +
+
+            if task not in self.depends_on:
+                self.depends_on[task] = []
+            if task not in self.depended_by:
+                self.depended_by[task] = []
+
+            for requirement in requirements:
+                if not isinstance(requirement, Task):
+                    raise TaskException("Requirement " + str(requirement) +
                                         " is not of type gaps.task.Task")
 
-                requirement_key = self.task_key(r)
+                if requirement not in self.depended_by:
+                    self.depended_by[requirement] = []
 
-                if task_key not in self.depends_on:
-                    self.depends_on[task_key] = []
-                if requirement_key not in self.depended_by:
-                    self.depended_by[requirement_key] = []
+                self.depends_on[task].append(requirement)
+                self.depended_by[requirement].append(task)
 
-                self.depends_on[task_key].append(requirement_key)
-                self.depended_by[requirement_key].append(task_key)
-
-                if not r.complete():
+                if not requirement.complete():
                     task_dependencies_completed = False
-                    task_list.append(r)
+                    task_list.append(requirement)
 
             if task_dependencies_completed:
                 self.frontier_tasks.append(task)
@@ -83,16 +91,21 @@ class Scheduler:
         # Tasks in this set were canceled due to downstream task failures
         canceled_tasks = set()
 
+        config = scheduler()
+
         # This is the main loop of the scheduler
         while len(active_workers) > 0 or len(self.frontier_tasks) > 0:
             # Update all slurm workers at once. Much more efficient than individually
-            if self.worker_type == 'slurm':
+            if config.worker_type == 'slurm':
                 SlurmWorker.retrieve_slurm_updates(active_workers)
 
             # Parititon active workers into workers that are finished
             # and workers that are not
             active_workers, finished_workers = partition_list(
-                lambda w: w.running, active_workers)
+                lambda w: w.is_running(), active_workers)
+            logger.debug(
+                'Scheduler found %d active workers and %d finished workers',
+                len(active_workers), len(finished_workers))
 
             for worker in finished_workers:
                 tasks = worker.task_list
@@ -101,7 +114,9 @@ class Scheduler:
                 for task, status in zip(tasks, task_statuses):
                     if status == task_status.DONE:
                         succeeded_tasks.add(task)
-                        for parent in self.depended_by[self.task_key(task)]:
+                        print(self.depended_by)
+                        for parent in self.depended_by[task]:
+                            print(parent)
                             if parent.ready():
                                 self.frontier_tasks.add(parent)
 
@@ -111,22 +126,27 @@ class Scheduler:
 
                     elif status == task_status.FAILED:
                         failed_tasks.add(task)
-                        parent_stack = OrderedSet(
-                            self.depended_by[self.task_key(task)])
+                        parent_stack = OrderedSet(self.depended_by[task])
+
                         while len(parent_stack) > 0:
-                            parent_task = parent_stack.pop()
-                            canceled_tasks.add(parent_task)
-                            parent_stack += self.depended_by[self.task_key(
-                                parent)]
+                            parent = parent_stack.pop()
+                            canceled_tasks.add(parent)
+                            parent_stack += self.depended_by[parent]
+
+            num_new_tasks = min(len(self.frontier_tasks),
+                                config.max_workers - len(active_workers))
+            if num_new_tasks > 0:
+                logger.debug('Scheudler starting %d new tasks', num_new_tasks)
 
             # Instantiate new jobs from the frontier
             while len(self.frontier_tasks) > 0 and len(
-                    active_workers) < self.max_workers:
-                task = self.frontier_tasks.popleft()
-                worker = Worker.create(self.worker_type, [task])
+                    active_workers) < config.max_workers:
+                task = self.frontier_tasks.pop(last=False)
+                worker = Worker.create(self.worker_type or config.worker_type,
+                                       [task])
                 worker.start()
                 active_workers.append(worker)
 
-            time.sleep(5)
+            time.sleep(config.poll_interval)
 
         return succeeded_tasks, failed_tasks, canceled_tasks

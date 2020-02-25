@@ -1,35 +1,46 @@
-"""Defines the SlurmWorker class"""
 import os
 import subprocess
+import logging
 
+import gaps
 import gaps.task_status as task_status
 import gaps.worker.slurm.client as slurm_client
 
 from gaps.worker.worker import Worker
 from gaps.worker.slurm.config import SlurmConfig
 
+logger = logging.getLogger('gaps-interface')
 
-def get_hpc_args():
-    '''
+
+def get_hpc_args(job_name, task_list_str):
+    """
     Return a formatted string with arguments and option flags to SLURM
     commands such as salloc and sbatch, for non-MPI, HPC jobs.
-    '''
+    """
     config = SlurmConfig()
 
     args = [
         'sbatch',
-        '---licenses=common',
+        '--licenses=common',
         '--partition=%s' % config.partition,
         '-N%d' % config.nodes,
         '--mem-per-cpu="%s"' % config.mem_per_cpu,
         '--error="%s/worker.%s.err"' % (config.log_dir, '%J'),
         '--output="%s/worker.%s.out"' % (config.log_dir, '%J'),
+        '--jobname=%s' % job_name,
     ]
 
     if config.time is not None:
         args.append('--time {t} '.format(t=config.time))
     if config.gres is not None:
         args.append('--gres={} '.format(config.gres))
+
+    args += [
+        os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                     'run_python.sh'),
+        slurm_client.__file__,
+        task_list_str,
+    ]
     return args
 
 
@@ -45,13 +56,17 @@ class SlurmWorker(Worker):
         super(SlurmWorker, self).__init__(*args, **kwargs)
         self._is_running = False
         self.task_statuses = []
+        if not gaps.util.test_slurm_availability():
+            logger.warn(
+                'Instantiating Slurm Worker in a non-slurm compatible environment'
+            )
 
     @staticmethod
     def retrieve_slurm_updates(workers):
         """Retrieves updates from slurm and passes them on to the workers"""
         worker_ids = [worker.worker_id for worker in workers]
         args = [
-            '/usr/bin/squeue', '-h', '-o', '%i,%t', '-j', ','.join(worker_ids)
+            '/usr/bin/squeue', '-h', '-o', '%i,%t', '-n', ','.join(worker_ids)
         ]
         slurm_q = subprocess.run(args,
                                  stdout=subprocess.PIPE,
@@ -75,13 +90,7 @@ class SlurmWorker(Worker):
         if not os.path.exists(config.log_dir):
             os.makedirs(config.log_dir)
         task_list_str = slurm_client.serialize_task_list(self.task_list)
-        args = get_hpc_args() + [
-            os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                         'run_python.sh'),
-            slurm_client.__file__,
-            task_list_str,
-        ]
-
+        args = get_hpc_args(self.worker_id, task_list_str)
         return args
 
     def start(self):
@@ -90,7 +99,7 @@ class SlurmWorker(Worker):
         subprocess.run(cli_args, check=True)
 
     def stop(self):
-        cli_args = ['scancel', '--jobname=%s' % self.worker_id]
+        cli_args = ['scancel', '-n' % self.worker_id]
         subprocess.run(cli_args, check=True)
 
     def is_running(self):

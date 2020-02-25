@@ -19,7 +19,6 @@ import os
 import warnings
 
 from .cfg_parser import GapsConfigParser
-from .toml_parser import GapsTomlParser
 
 logger = logging.getLogger('gaps-interface')
 
@@ -27,7 +26,6 @@ PARSERS = {
     'cfg': GapsConfigParser,
     'conf': GapsConfigParser,
     'ini': GapsConfigParser,
-    'toml': GapsTomlParser,
 }
 
 # select parser via env var

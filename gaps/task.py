@@ -826,7 +826,7 @@ def externalize(taskclass_or_taskobject):
 
     .. code-block:: python
 
-        externalize(MyTask)  # BAD: This does nothing (as after gaps 2.4.0)
+        externalize(MyTask)  # BAD: This does nothing
     """
     copied_value = copy.copy(taskclass_or_taskobject)
     if copied_value is taskclass_or_taskobject:

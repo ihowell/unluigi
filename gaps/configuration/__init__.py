@@ -16,11 +16,9 @@
 #
 from .cfg_parser import GapsConfigParser
 from .core import get_config, add_config_path
-from .toml_parser import GapsTomlParser
 
 __all__ = [
     'add_config_path',
     'get_config',
     'GapsConfigParser',
-    'GapsTomlParser',
 ]

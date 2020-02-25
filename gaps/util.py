@@ -219,11 +219,13 @@ time. Brilliant!
 
 import datetime
 import logging
+import subprocess
 
 from gaps import task
 from gaps import parameter
 
 logger = logging.getLogger('gaps-interface')
+slurm_availability = None
 
 
 def common_params(task_instance, task_cls):
@@ -492,3 +494,17 @@ def add_metaclass(metaclass):
         return metaclass(cls.__name__, cls.__bases__, orig_vars)
 
     return wrapper
+
+
+def test_slurm_availability():
+    """Checks if slurm is avaiable on the current machine."""
+    global slurm_availability
+    if slurm_availability is None:
+        try:
+            subprocess.run(['squeue'], check=True)
+            slurm_availability = True
+        except subprocess.CalledProcessError:
+            slurm_availability = False
+        except FileNotFoundError:
+            slurm_availability = False
+    return slurm_availability
