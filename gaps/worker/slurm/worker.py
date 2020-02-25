@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import logging
 
@@ -10,6 +11,15 @@ from gaps.worker.worker import Worker
 from gaps.worker.slurm.config import SlurmConfig
 
 logger = logging.getLogger('gaps-interface')
+logger.setLevel(logging.DEBUG)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+print('slurm', logger.getEffectiveLevel())
 
 
 def get_hpc_args(job_name, task_list_str):
@@ -24,10 +34,10 @@ def get_hpc_args(job_name, task_list_str):
         '--licenses=common',
         '--partition=%s' % config.partition,
         '-N%d' % config.nodes,
-        '--mem-per-cpu="%s"' % config.mem_per_cpu,
-        '--error="%s/worker.%s.err"' % (config.log_dir, '%J'),
-        '--output="%s/worker.%s.out"' % (config.log_dir, '%J'),
-        '--jobname=%s' % job_name,
+        '--mem-per-cpu=%s' % config.mem_per_cpu,
+        '--output=%s/worker.%s.out' % (config.log_dir, '%J'),
+        '--error=%s/worker.%s.err' % (config.log_dir, '%J'),
+        '--job-name=%s' % job_name,
     ]
 
     if config.time is not None:
@@ -41,6 +51,8 @@ def get_hpc_args(job_name, task_list_str):
         slurm_client.__file__,
         task_list_str,
     ]
+    print('slurm level', logger.getEffectiveLevel())
+    logger.debug('HPC Args: ' + str(args))
     return args
 
 

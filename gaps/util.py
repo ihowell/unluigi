@@ -501,7 +501,7 @@ def test_slurm_availability():
     global slurm_availability
     if slurm_availability is None:
         try:
-            subprocess.run(['squeue'], check=True)
+            subprocess.run(['squeue'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
             slurm_availability = True
         except subprocess.CalledProcessError:
             slurm_availability = False
