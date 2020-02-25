@@ -3,8 +3,28 @@
 import argparse
 import json
 import importlib
+import inspect
+import os
 
 import gaps
+
+
+def split_path(path):
+    head, tail = os.path.split(path)
+    if head == path or head == '':
+        paths = []
+        for comp in [head, tail]:
+            if comp != '':
+                paths.append(comp)
+        return paths
+    return split_path(head) + [tail]
+
+
+def get_module_name(path):
+    components = split_path(os.path.splitext(path)[0])
+    if components[0] == '/':
+        components = components[1:]
+    return '.'.join(components)
 
 
 def serialize_task_list(task_list):
@@ -24,7 +44,8 @@ def serialize_task_list(task_list):
     for task in task_list:
         task_obj = {}
         cls = task.__class__
-        task_obj['module'] = cls.__module__
+
+        task_obj['file'] = inspect.getmodule(cls).__file__
         task_obj['class'] = cls.__name__
         task_obj['params'] = task.to_str_params()
         output_obj.append(task_obj)
@@ -40,10 +61,15 @@ def deserialize_task_list(task_list_str):
     Returns:
        task_list (list(Task)): The list of tasks, deserialized
     """
+
     task_list_json = json.loads(task_list_str)
     task_list = []
     for task_obj in task_list_json:
-        task_module = importlib.import_module(task_obj['module'])
+        spec = importlib.util.spec_from_file_location(
+            get_module_name(task_obj['file']), task_obj['file'])
+        task_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(task_module)
+
         task_cls = getattr(task_module, task_obj['class'])
         task = task_cls.from_str_params(task_obj['params'])
         task_list.append(task)

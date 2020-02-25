@@ -22,6 +22,15 @@ class SlurmClientTest(parameterized.TestCase):
         task_list_str = serialize_task_list(task_list)
         second_task_list = deserialize_task_list(task_list_str)
 
+        print('Task list orig', task_list)
+        print('Task list finl', second_task_list)
+        print('Task list string', task_list_str)
+        print('BasicTask module', task_list[0].__class__.__module__)
+        print('BasicTask module', second_task_list[0].__class__.__module__)
         self.assertTrue(len(task_list) == len(second_task_list))
         for task_1, task_2 in zip(task_list, second_task_list):
-            self.assertTrue(task_1 == task_2)
+            # Cannot do trivial equality, as when a task is reloaded,
+            # it has a new module name
+            self.assertFalse(
+                task_1.get_task_family() == task_2.get_task_family())
+            self.assertTrue(task_1.to_str_params() == task_2.to_str_params())
