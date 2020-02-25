@@ -111,34 +111,15 @@ class core(task.Config):
         always_in_help=True)
 
 
-class _WorkerSchedulerFactory(object):
-    def create_local_scheduler(self):
-        return scheduler.Scheduler(prune_on_get_work=True,
-                                   record_task_history=False)
-
-    # def create_remote_scheduler(self, url):
-    #     return rpc.RemoteScheduler(url)
-
-    def create_worker(self, scheduler, worker_processes, assistant=False):
-        return worker.Worker(scheduler=scheduler,
-                             worker_processes=worker_processes,
-                             assistant=assistant)
-
-
-def _schedule_and_run(tasks,
-                      worker_scheduler_factory=None,
-                      override_defaults=None):
+def _schedule_and_run(tasks, override_defaults=None):
     """
     :param tasks:
-    :param worker_scheduler_factory:
     :param override_defaults:
     :return: True if all tasks and their dependencies were successfully run (or already completed);
              False if any error occurred. It will return a detailed response of type GapsRunResult
              instead of a boolean if detailed_summary=True.
     """
 
-    if worker_scheduler_factory is None:
-        worker_scheduler_factory = _WorkerSchedulerFactory()
     if override_defaults is None:
         override_defaults = {}
     env_params = core(**override_defaults)
@@ -150,34 +131,24 @@ def _schedule_and_run(tasks,
     #         env_params.lock_pid_dir, env_params.lock_size, kill_signal))):
     #     raise PidLockAlreadyTakenExit()
 
-    if env_params.local_scheduler:
-        sch = worker_scheduler_factory.create_local_scheduler()
-    else:
-        if env_params.scheduler_url != '':
-            url = env_params.scheduler_url
-        else:
-            url = 'http://{host}:{port:d}/'.format(
-                host=env_params.scheduler_host,
-                port=env_params.scheduler_port,
-            )
-        sch = worker_scheduler_factory.create_remote_scheduler(url=url)
-
-    worker = worker_scheduler_factory.create_worker(
-        scheduler=sch,
-        worker_processes=env_params.workers,
-        assistant=env_params.assistant)
+    sch = scheduler.Scheduler(tasks)
 
     success = True
     logger = logging.getLogger('gaps-interface')
-    with worker:
-        for t in tasks:
-            success &= worker.add(t, env_params.parallel_scheduling,
-                                  env_params.parallel_scheduling_processes)
-        logger.info('Done scheduling tasks')
-        success &= worker.run()
-    gaps_run_result = GapsRunResult(worker, success)
-    logger.info(gaps_run_result.summary_text)
-    return gaps_run_result
+
+    logger.info('Done scheduling tasks')
+    succeeded_tasks, failed_tasks, canceled_tasks = sch.run()
+
+    success = len(failed_tasks) == 0
+    # gaps_run_result = GapsRunResult(worker, success)
+    summary_text = """
+    Tasks succeeded or found done: %d
+    Tasks failed: %d
+    Tasks not run %d
+    """ % (len(succeeded_tasks), len(failed_tasks), len(canceled_tasks))
+    # logger.info(gaps_run_result.summary_text)
+    logger.info(summary_text)
+    # return gaps_run_result
 
 
 class PidLockAlreadyTakenExit(SystemExit):
@@ -195,9 +166,10 @@ def run(*args, **kwargs):
 
     :param use_dynamic_argparse: Deprecated and ignored
     """
-    gaps_run_result = _run(*args, **kwargs)
-    return gaps_run_result if kwargs.get(
-        'detailed_summary') else gaps_run_result.scheduling_succeeded
+    _run(*args, **kwargs)
+    # gaps_run_result = _run(*args, **kwargs)
+    # return gaps_run_result if kwargs.get(
+    #     'detailed_summary') else gaps_run_result.scheduling_succeeded
 
 
 def _run(cmdline_args=None,
@@ -247,7 +219,8 @@ def build(tasks,
     if "no_lock" not in env_params:
         env_params["no_lock"] = True
 
-    gaps_run_result = _schedule_and_run(tasks,
-                                        worker_scheduler_factory,
-                                        override_defaults=env_params)
-    return gaps_run_result if detailed_summary else gaps_run_result.scheduling_succeeded
+    _schedule_and_run(tasks)
+    # gaps_run_result = _schedule_and_run(tasks,
+    #                                     worker_scheduler_factory,
+    #                                     override_defaults=env_params)
+    # return gaps_run_result if detailed_summary else gaps_run_result.scheduling_succeeded
