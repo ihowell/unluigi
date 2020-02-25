@@ -31,6 +31,6 @@ class SlurmClientTest(parameterized.TestCase):
         for task_1, task_2 in zip(task_list, second_task_list):
             # Cannot do trivial equality, as when a task is reloaded,
             # it has a new module name
-            self.assertFalse(
+            self.assertTrue(
                 task_1.get_task_family() == task_2.get_task_family())
             self.assertTrue(task_1.to_str_params() == task_2.to_str_params())
