@@ -80,9 +80,9 @@ def get_argstr_hpc(task):
 
     srun_argstr = ' srun -n 1 -c {thr} '.format(thr=config.threads)
     if config.stdout is not None:
-        srun_argstr += '-o {} '.format(config.stdout)
+        srun_argstr += '-o {}/{}.out '.format(config.stdout, get_jobname(task))
     if config.stderr is not None:
-        srun_argstr += '-e {} '.format(config.stderr)
+        srun_argstr += '-e {}/{}.err '.format(config.stderr, get_jobname(task))
     return salloc_argstr + srun_argstr
 
 
