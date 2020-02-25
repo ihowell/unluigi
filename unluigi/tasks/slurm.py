@@ -108,10 +108,9 @@ class SlurmTask(luigi.task.Task):
         self.register_on_success(self.cancel_container_job)
 
     def cancel_container_job(self, *args):
-        job_id = get_jobname(self)
-        log.debug('Canceling job ' + job_id + 'for task: ' + self.task_family +
-                  " " + str(self.to_str_params()))
-        args = ['/usr/bin/squeue', '-h', '-o', '%i,%t', '-j', job_id]
+        job_name = get_jobname(self)
+        log.debug('Checking if job ' + job_name + ' is still running')
+        args = ['/usr/bin/squeue', '-h', '-o', '%i,%t', '-n', job_name]
         slurm_q = subprocess.run(args,
                                  stdout=subprocess.PIPE,
                                  universal_newlines=True,
@@ -121,8 +120,10 @@ class SlurmTask(luigi.task.Task):
             split = line.split(',')
             running_ids.append(split[0].strip())
 
-        if job_id in running_ids:
-            args = ['/usr/bin/scancel', job_id]
+        if job_name in running_ids:
+            log.debug('Canceling job ' + job_name + 'for task: ' +
+                      self.task_family + " " + str(self.to_str_params()))
+            args = ['/usr/bin/scancel', '-n', job_name]
             subprocess.run(args, stdout=subprocess.PIPE, check=True)
 
     def register_on_success(self, f):
