@@ -11,12 +11,13 @@ class EvalTask(ShellTask):
     augmentation = luigi.Parameter()
     train_seed = luigi.IntParameter()
     eval_seed = luigi.IntParameter()
+    base_path = luigi.Parameter()
 
     def get_task_name_str(self):
         return self.train_task_name_str() + '_' + str(self.eval_seed)
 
     def get_output_dir(self):
-        return osp.join('/work/scott/equint/baselines/', self.get_task_name_str())
+        return osp.join(self.base_path, self.get_task_name_str())
 
     def train_task_name_str(self):    
         id_str = ''
@@ -28,7 +29,7 @@ class EvalTask(ShellTask):
         return id_str
 
     def get_train_task_dir(self):
-        return osp.join('/work/scott/equint/baselines/', self.train_task_name_str())
+        return osp.join(self.base_path, self.train_task_name_str())
 
     def requires(self):
         return TrainTask(self.env_type, self.env, self.constraint, self.reward_shaping, self.augmentation, self.train_seed)
@@ -72,6 +73,7 @@ class TrainTask(ShellTask):
     reward_shaping = luigi.IntParameter()
     augmentation = luigi.Parameter()
     seed = luigi.IntParameter()
+    base_path = luigi.Parameter()
 
     def get_task_name_str(self):
         id_str = ''
@@ -83,8 +85,8 @@ class TrainTask(ShellTask):
         return id_str
 
     def get_output_dir(self):
-        print(osp.join('/work/scott/equint/baselines/', self.get_task_name_str()))
-        return osp.join('/work/scott/equint/baselines/', self.get_task_name_str())
+        print(osp.join(self.base_path, self.get_task_name_str()))
+        return osp.join(self.base_path, self.get_task_name_str())
 
     def run(self):
         cmd_str = 'python -m baselines.run'

@@ -18,3 +18,9 @@ mem=16000
 time = "3-00:00:00"
 threads = 1
 gres="gpu:1"
+
+[EvalTask]
+base_path = '/work/scott/equint/baselines/'
+
+[TrainTask]
+base_path = '/work/scott/equint/baselines/'

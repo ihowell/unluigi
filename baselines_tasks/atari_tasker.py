@@ -7,8 +7,6 @@ import random
 
 from baselines_tasks.train_task import TrainTask, EvalTask
 
-PREAMBLE_PATH = "/Users/equint/Documents/GitHub/unl-luigi/baselines_tasks/local_preamble.sh"
-
 def create_tasks():
     # per-task info
     env_type = ['atari']
