@@ -54,9 +54,8 @@ class BasicWorkflowIntegrationTest(parameterized.TestCase):
             shutil.rmtree(exp_dir)
 
     def get_exp_dir(self):
-        return os.path.join(
-            pathlib.Path(__file__).parent.absolute(),
-            'basic-workflow-integration')
+        base_path = os.getenv('WORK', pathlib.Path(__file__).parent.absolute())
+        return os.path.join(base_path, 'basic-workflow-integration')
 
     def test_run_scheduler_basic_worker(self):
         exp_dir = os.path.join(self.get_exp_dir(), 'basic')
@@ -65,7 +64,8 @@ class BasicWorkflowIntegrationTest(parameterized.TestCase):
         self.task_list.append(BasicTask(directory=exp_dir, txt='2'))
         self.task_list.append(DependsTask(directory=exp_dir, txt='3'))
 
-        scheduler = gaps.scheduler.Scheduler(self.task_list)
+        scheduler = gaps.scheduler.Scheduler(self.task_list,
+                                             worker_type='basic')
         scheduler.run()
 
         for task in self.task_list:

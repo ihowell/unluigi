@@ -95,10 +95,12 @@ class Scheduler:
 
         config = scheduler()
 
+        worker_type = self.worker_type or config.worker_type
+
         # This is the main loop of the scheduler
         while len(active_workers) > 0 or len(self.frontier_tasks) > 0:
             # Update all slurm workers at once. Much more efficient than individually
-            if config.worker_type == 'slurm':
+            if worker_type == 'slurm':
                 SlurmWorker.retrieve_slurm_updates(active_workers)
 
             # Parititon active workers into workers that are finished
@@ -156,8 +158,7 @@ class Scheduler:
                     for parent in self.depended_by[task]:
                         self.frontier_tasks.add(parent)
                 else:
-                    worker = Worker.create(
-                        self.worker_type or config.worker_type, [task])
+                    worker = Worker.create(worker_type, [task])
                     worker.start()
                     active_workers.append(worker)
 
