@@ -42,8 +42,6 @@ def get_hpc_args(job_name, task_list_str):
         slurm_client.__file__,
         task_list_str,
     ]
-    print('slurm level', logger.getEffectiveLevel())
-    logger.debug('HPC Args: ' + str(args))
     return args
 
 
@@ -69,7 +67,7 @@ class SlurmWorker(Worker):
         """Retrieves updates from slurm and passes them on to the workers"""
         worker_ids = [worker.worker_id for worker in workers]
         args = [
-            '/usr/bin/squeue', '-h', '-o', '%i,%t', '-n', ','.join(worker_ids)
+            '/usr/bin/squeue', '-h', '-o', '%j,%t', '-n', ','.join(worker_ids)
         ]
         slurm_q = subprocess.run(args,
                                  stdout=subprocess.PIPE,
@@ -109,6 +107,7 @@ class SlurmWorker(Worker):
         return self._is_running
 
     def get_task_statuses(self):
+        self.task_statuses = []
         task_chain_complete = False
         for task in self.task_list:
             if not task_chain_complete:

@@ -65,6 +65,8 @@ class Scheduler:
                     raise TaskException("Requirement " + str(requirement) +
                                         " is not of type gaps.task.Task")
 
+                if requirement not in self.depends_on:
+                    self.depends_on[requirement] = []
                 if requirement not in self.depended_by:
                     self.depended_by[requirement] = []
 
@@ -103,9 +105,9 @@ class Scheduler:
             # and workers that are not
             active_workers, finished_workers = partition_list(
                 lambda w: w.is_running(), active_workers)
-            logger.debug(
-                'Scheduler found %d active workers and %d finished workers',
-                len(active_workers), len(finished_workers))
+            # logger.debug(
+            #     'Scheduler found %d active workers and %d finished workers',
+            #     len(active_workers), len(finished_workers))
 
             for worker in finished_workers:
                 tasks = worker.task_list
@@ -113,6 +115,7 @@ class Scheduler:
 
                 for task, status in zip(tasks, task_statuses):
                     if status == task_status.DONE:
+                        logger.debug('Worker completed task %s', task)
                         succeeded_tasks.add(task)
                         print(self.depended_by)
                         for parent in self.depended_by[task]:
@@ -121,10 +124,14 @@ class Scheduler:
                                 self.frontier_tasks.add(parent)
 
                     elif status == task_status.WORKER_CANCELED:
+                        logger.debug('Worker canceled task %s', task)
                         if task.ready():
                             self.frontier_tasks.add(task)
+                        else:
+                            canceled_tasks.add(task)
 
                     elif status == task_status.FAILED:
+                        logger.debug('Worker failed task %s', task)
                         failed_tasks.add(task)
                         parent_stack = OrderedSet(self.depended_by[task])
 
@@ -132,6 +139,9 @@ class Scheduler:
                             parent = parent_stack.pop()
                             canceled_tasks.add(parent)
                             parent_stack += self.depended_by[parent]
+                    else:
+                        logger.error('Unseen status %s for task %s', status,
+                                     task)
 
             num_new_tasks = min(len(self.frontier_tasks),
                                 config.max_workers - len(active_workers))
@@ -142,10 +152,14 @@ class Scheduler:
             while len(self.frontier_tasks) > 0 and len(
                     active_workers) < config.max_workers:
                 task = self.frontier_tasks.pop(last=False)
-                worker = Worker.create(self.worker_type or config.worker_type,
-                                       [task])
-                worker.start()
-                active_workers.append(worker)
+                if task.complete():
+                    for parent in self.depended_by[task]:
+                        self.frontier_tasks.add(parent)
+                else:
+                    worker = Worker.create(
+                        self.worker_type or config.worker_type, [task])
+                    worker.start()
+                    active_workers.append(worker)
 
             time.sleep(config.poll_interval)
 
