@@ -5,8 +5,13 @@ import json
 import importlib
 import inspect
 import os
+import logging
 
 import gaps
+
+from gaps.setup_logging import InterfaceLogging
+
+logger = logging.getLogger('gaps-interface')
 
 
 def split_path(path):
@@ -65,6 +70,8 @@ def deserialize_task_list(task_list_str):
     task_list_json = json.loads(task_list_str)
     task_list = []
     for task_obj in task_list_json:
+        logger.debug('Retrieving class from file: ' + task_obj['file'])
+
         spec = importlib.util.spec_from_file_location(
             get_module_name(task_obj['file']), task_obj['file'])
         task_module = importlib.util.module_from_spec(spec)
@@ -79,6 +86,9 @@ def deserialize_task_list(task_list_str):
 def main():
     """Parses a task list from CLI args and then runs the task list in a BasicWorker
     """
+    env_params = gaps.interface.core()
+    InterfaceLogging.setup(env_params)
+
     parser = argparse.ArgumentParser(
         description='Runs jobs on Crane nodes for the SlurmWorker')
     parser.add_argument('task_list_str')

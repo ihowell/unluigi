@@ -11,15 +11,6 @@ from gaps.worker.worker import Worker
 from gaps.worker.slurm.config import SlurmConfig
 
 logger = logging.getLogger('gaps-interface')
-logger.setLevel(logging.DEBUG)
-
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
-print('slurm', logger.getEffectiveLevel())
 
 
 def get_hpc_args(job_name, task_list_str):
