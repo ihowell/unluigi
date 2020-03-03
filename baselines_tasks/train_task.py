@@ -45,8 +45,16 @@ class EvalTask(ShellTask):
             cmd_str += ' --alg ppo2'
             cmd_str += ' --num_timesteps 100000'
         if self.constraint:
-            cmd_str += ' --constraints ' + str(self.constraint) + '_' + str(self.env)
-            cmd_str += ' --reward_shaping ' + str(self.reward_shaping)
+            if '_hard' in self.constraints:
+                cmd_str += ' --constraints ' + str(self.constraint[:-5]) + '_' + str(self.env)
+                cmd_str += ' --is_hard'
+            elif '_dense' in self.constraint:
+                cmd_str += ' --constraints ' + str(self.constraint[:-6]) + '_' + str(self.env)
+                cmd_str += ' --reward_shaping ' + str(self.reward_shaping)
+                cmd_str += ' --is_dense'
+            else:
+                cmd_str += ' --constraints ' + str(self.constraint) + '_' + str(self.env)
+                cmd_str += ' --reward_shaping ' + str(self.reward_shaping)
         if self.augmentation:
             if self.augmentation == 'constraint_state_noembed':
                 cmd_str += ' --augmentation ' + str('constraint_state')
