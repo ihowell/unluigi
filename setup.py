@@ -1,6 +1,6 @@
 from setuptools import setup
 
-setup(name='luigi-runner',
+setup(name='unluigi',
       version='0.1',
       description='A runner of luigi projects',
       url='',

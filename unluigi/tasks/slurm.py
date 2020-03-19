@@ -5,12 +5,15 @@ This module contains functionality related to integration with the SLURM HPC
 resource manger.
 '''
 
+import subprocess
 import datetime
 import logging
 import re
 import time
 import luigi.parameter
 import luigi.task
+import json
+import hashlib
 import subprocess as sub
 
 # ================================================================================
@@ -41,7 +44,19 @@ class SlurmConfig(luigi.Config):
 # ================================================================================
 
 
-def get_argstr_hpc():
+def get_hash(task):
+    hashables = {'cls': task.__class__.__name__, **task.to_str_params()}
+    hash_str = json.dumps(hashables, separators=(',', ':'), sort_keys=True)
+    task_hash = hashlib.md5(hash_str.encode('utf-8')).hexdigest()
+    return task_hash
+
+
+def get_jobname(task):
+    config = SlurmConfig()
+    return config.jobname + '_' + get_hash(task)
+
+
+def get_argstr_hpc(task):
     '''
     Return a formatted string with arguments and option flags to SLURM
     commands such as salloc and sbatch, for non-MPI, HPC jobs.
@@ -52,7 +67,7 @@ def get_argstr_hpc():
         pt=config.partition,
         c=config.cores,
         t=config.time,
-        j=config.jobname)
+        j=get_jobname(task))
     if config.time is not None:
         salloc_argstr += '-t {t} '.format(t=config.time)
     if config.gres is not None:
@@ -62,7 +77,7 @@ def get_argstr_hpc():
     return salloc_argstr + srun_argstr
 
 
-def get_argstr_mpi():
+def get_argstr_mpi(task):
     '''
     Return a formatted string with arguments and option flags to SLURM
     commands such as salloc and sbatch, for MPI jobs.
@@ -73,7 +88,7 @@ def get_argstr_mpi():
         pt=config.partition,
         c1=config.cores,
         t=config.time,
-        j=config.jobname,
+        j=get_jobname(task),
         c2=config.cores)
     return argstr
 
@@ -85,6 +100,45 @@ class SlurmTask(luigi.task.Task):
     '''
     Various convenience methods for executing jobs via SLURM
     '''
+    def __init__(self, *args, **kwargs):
+        super(SlurmTask, self).__init__(*args, **kwargs)
+        self.on_success_hooks = []
+        self.on_failure_hooks = []
+        self.register_on_failure(self.cancel_container_job)
+        self.register_on_success(self.cancel_container_job)
+
+    def cancel_container_job(self, *args):
+        job_name = get_jobname(self)
+        log.debug('Checking if job ' + job_name + ' is still running')
+        args = ['/usr/bin/squeue', '-h', '-o', '%i,%t', '-n', job_name]
+        slurm_q = subprocess.run(args,
+                                 stdout=subprocess.PIPE,
+                                 universal_newlines=True,
+                                 check=True)
+        running_ids = []
+        for line in slurm_q.stdout.splitlines():
+            split = line.split(',')
+            running_ids.append(split[0].strip())
+
+        if job_name in running_ids:
+            log.debug('Canceling job ' + job_name + 'for task: ' +
+                      self.task_family + " " + str(self.to_str_params()))
+            args = ['/usr/bin/scancel', '-n', job_name]
+            subprocess.run(args, stdout=subprocess.PIPE, check=True)
+
+    def register_on_success(self, f):
+        self.on_failure_hooks.append(f)
+
+    def on_success(self):
+        for hook in self.on_success_hooks:
+            hook()
+
+    def register_on_failure(self, f):
+        self.on_failure_hooks.append(f)
+
+    def on_failure(self, exception):
+        for hook in self.on_failure_hooks:
+            hook(exception)
 
     # Main Execution methods
     def ex(self, command):
@@ -139,7 +193,7 @@ class SlurmTask(luigi.task.Task):
         if isinstance(command, list):
             command = sub.list2cmdline(command)
 
-        fullcommand = 'salloc %s %s' % (get_argstr_hpc(), command)
+        fullcommand = 'salloc %s %s' % (get_argstr_hpc(self), command)
         print("Full hpc command: %s" % fullcommand)
         (retcode, stdout, stderr) = self.ex_local(fullcommand)
 
@@ -147,13 +201,13 @@ class SlurmTask(luigi.task.Task):
         return (retcode, stdout, stderr)
 
     def ex_mpi(self, command):
-        '''
-        Execute command in HPC mode with MPI support (multi-node, message passing interface).
+        '''Execute command in HPC mode with MPI support (multi-node, message
+        passing interface).
         '''
         if isinstance(command, list):
             command = sub.list2cmdline(command)
 
-        fullcommand = 'salloc %s %s' % (get_argstr_mpi(), command)
+        fullcommand = 'salloc %s %s' % (get_argstr_mpi(self), command)
         (retcode, stdout, stderr) = self.ex_local(fullcommand)
 
         self.log_slurm_info(stderr)
