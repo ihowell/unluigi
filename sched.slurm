@@ -1,14 +1,10 @@
 #!/bin/sh
-#SBATCH --mem-per-cpu=4096
-#SBATCH --job-name=LuigiScheduler
-#SBATCH --partition=batch
-#SBATCH --error=/work/[groupname]/[username]/sched_logs/job.%J.err
-#SBATCH --output=/work/[groupname]/[username]/sched_logs/job.%J.out
+#SBATCH --array=0-2
+#SBATCH --mem-per-cpu=32768
+#SBATCH --time=7-0
+#SBATCH --job-name=LuigiWorker
+#SBATCH --partition=batch,choueiry
+#SBATCH --error=/work/[group]/[user]/sched_logs/sched_%a.err
+#SBATCH --output=/work/[group]/[user]/sched_logs/sched_%a.out
 
-module load python/3.7
-pip install --user -r requirements.txt
-export PATH=$PATH:/home/[groupname]/[username]/.local/bin
-
-export LUIGI_CONFIG_PARSER=toml
-export LUIGI_CONFIG_PATH=$1
-python3 ./unl_luigi/sched.py ${@:2}
+./resources/crane_cpu.sh $@

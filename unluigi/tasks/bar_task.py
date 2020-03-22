@@ -1,10 +1,12 @@
 import luigi
 import os
-from unluigi.tasks.shell_task import ShellTask
+
+import unluigi.util as util
+
 from unluigi.util.atomic_file_pointer import AtomicFilePointer
 
 
-class BarTask(ShellTask):
+class BarTask(luigi.Task):
     foo_path = luigi.Parameter()
     foo_num = luigi.NumericalParameter(var_type=int,
                                        min_value=0,
@@ -20,7 +22,7 @@ class BarTask(ShellTask):
         with AtomicFilePointer(
                 os.path.join(self.bar_directory,
                              "bar_%d.txt" % self.foo_num)).open() as bar_file:
-            (returncode, stdout, stderr) = self.ex(
+            (returncode, stdout, stderr) = util.ex_local(
                 "echo \"%d - bar\" > %s" % (self.foo_num, bar_file.tmp_path))
 
         if returncode > 0:

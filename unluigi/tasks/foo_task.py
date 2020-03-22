@@ -1,10 +1,12 @@
 import luigi
 import os
+
+import unluigi.util as util
+
 from unluigi.util.atomic_file_pointer import AtomicFilePointer
-from unluigi.tasks.shell_task import ShellTask
 
 
-class FooTask(ShellTask):
+class FooTask(luigi.Task):
     foo_directory = luigi.Parameter()
     foo_num = luigi.NumericalParameter(var_type=int,
                                        min_value=0,
@@ -16,5 +18,4 @@ class FooTask(ShellTask):
 
     def run(self):
         with AtomicFilePointer(self.output().path).open() as foo_file:
-            self.run_command("echo %d > %s" %
-                             (self.foo_num, foo_file.tmp_path))
+            util.ex_local("echo %d > %s" % (self.foo_num, foo_file.tmp_path))
