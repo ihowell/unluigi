@@ -45,8 +45,29 @@ def oned_tasks():
     ]
     return [EvalTask(**a) for a in args]
 
+def breakout_tasks():
+    # per-task info
+    env_type = ['atari']
+    env = ['Breakout']
+    constraint = ['paddle_ball_distance', 'paddle_ball_distance_dense', 'paddle_ball_distance_hard']
+    reward_shaping = [0, -0.0025, -0.005, -0.01]
+    augmentation = ['', 'constraint_state', 'constraint_state_noembed', 'action_history']
+    train_seed = [7842]#, 1206, 8610]
+    eval_seed = [5722, 2579]#, 1892, 7583, 9238]
+    arg_names = [
+        'env_type', 'env', 'constraint', 'reward_shaping', 'augmentation',
+        'train_seed', 'eval_seed'
+    ]
+
+    args = [
+        dict(zip(arg_names, arg_vals)) for arg_vals in itertools.product(
+            env_type, env, constraint, reward_shaping, augmentation, train_seed, eval_seed)
+    ]
+    return [EvalTask(**a) for a in args]
+    
+
 
 def create_tasks():
-    tasks = oned_tasks() + twod_tasks()
+    tasks = oned_tasks() + twod_tasks() + breakout_tasks()
     random.shuffle(tasks)
     return tasks
