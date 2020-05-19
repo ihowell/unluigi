@@ -3,6 +3,7 @@ import os.path as osp
 
 from unluigi.tasks.shell_task import ShellTask
 
+
 class EvalTask(ShellTask):
     env_type = luigi.Parameter()
     env = luigi.Parameter()
@@ -19,7 +20,7 @@ class EvalTask(ShellTask):
     def get_output_dir(self):
         return osp.join(self.base_path, self.get_task_name_str())
 
-    def train_task_name_str(self):    
+    def train_task_name_str(self):
         id_str = ''
         id_str += self.env + '_'
         id_str += self.constraint + '_'
@@ -32,7 +33,16 @@ class EvalTask(ShellTask):
         return osp.join(self.base_path, self.train_task_name_str())
 
     def requires(self):
-        return TrainTask(self.env_type, self.env, self.constraint, self.reward_shaping, self.augmentation, self.train_seed)
+        constraint = self.constraint
+        if '_hardtrain' in constraint:
+            # pass hard part to train
+            constraint = constraint[:-5]
+        elif '_hardeval' in constraint:
+            # don't pass hard part to train at all
+            constraint = constraint[:-9]
+        return TrainTask(self.env_type, self.env, constraint,
+                         self.reward_shaping, self.augmentation,
+                         self.train_seed)
 
     def run(self):
         cmd_str = 'python -m baselines.constraint.deepq.run_evaluation'
@@ -45,15 +55,27 @@ class EvalTask(ShellTask):
             cmd_str += ' --alg ppo2'
             cmd_str += ' --num_timesteps 100000'
         if self.constraint:
-            if '_hard' in self.constraint:
-                cmd_str += ' --constraints ' + str(self.constraint[:-5]) + '_' + str(self.env)
+            if '_hardtrain' in self.constraint:
+                cmd_str += ' --reward_shaping ' + str(0.0)
+                cmd_str += ' --constraints ' + str(
+                    self.constraint[:-10]) + '_' + str(self.env)
+            elif '_hardeval' in self.constraint:
+                cmd_str += ' --constraints ' + str(
+                    self.constraint[:-9]) + '_' + str(self.env)
                 cmd_str += ' --is_hard'
+            elif '_hard' in self.constraint:
+                cmd_str += ' --constraints ' + str(
+                    self.constraint[:-5]) + '_' + str(self.env)
+                cmd_str += ' --is_hard'
+
             elif '_dense' in self.constraint:
-                cmd_str += ' --constraints ' + str(self.constraint[:-6]) + '_' + str(self.env)
+                cmd_str += ' --constraints ' + str(
+                    self.constraint[:-6]) + '_' + str(self.env)
                 cmd_str += ' --reward_shaping ' + str(self.reward_shaping)
                 cmd_str += ' --is_dense'
             else:
-                cmd_str += ' --constraints ' + str(self.constraint) + '_' + str(self.env)
+                cmd_str += ' --constraints ' + str(
+                    self.constraint) + '_' + str(self.env)
                 cmd_str += ' --reward_shaping ' + str(self.reward_shaping)
         if self.augmentation:
             if self.augmentation == 'constraint_state_noembed':
@@ -69,10 +91,13 @@ class EvalTask(ShellTask):
 
         r = self.run_command(cmd_str)
         print(r)
-        
 
     def output(self):
-        return {"success": luigi.LocalTarget(osp.join(self.get_output_dir(), 'final_log.txt'))}
+        return {
+            "success":
+            luigi.LocalTarget(osp.join(self.get_output_dir(), 'final_log.txt'))
+        }
+
 
 class TrainTask(ShellTask):
     env_type = luigi.Parameter()
@@ -107,14 +132,17 @@ class TrainTask(ShellTask):
             cmd_str += ' --num_timesteps 1e6'
         if self.constraint:
             if '_hard' in self.constraint:
-                cmd_str += ' --constraints ' + str(self.constraint[:-5]) + '_' + str(self.env)
+                cmd_str += ' --constraints ' + str(
+                    self.constraint[:-5]) + '_' + str(self.env)
                 cmd_str += ' --is_hard'
             elif '_dense' in self.constraint:
-                cmd_str += ' --constraints ' + str(self.constraint[:-6]) + '_' + str(self.env)
+                cmd_str += ' --constraints ' + str(
+                    self.constraint[:-6]) + '_' + str(self.env)
                 cmd_str += ' --reward_shaping ' + str(self.reward_shaping)
                 cmd_str += ' --is_dense'
             else:
-                cmd_str += ' --constraints ' + str(self.constraint) + '_' + str(self.env)
+                cmd_str += ' --constraints ' + str(
+                    self.constraint) + '_' + str(self.env)
                 cmd_str += ' --reward_shaping ' + str(self.reward_shaping)
         if self.augmentation:
             if self.augmentation == 'constraint_state_noembed':
@@ -131,4 +159,10 @@ class TrainTask(ShellTask):
         print(r)
 
     def output(self):
-        return {"success": luigi.LocalTarget(osp.join(self.get_output_dir(), 'final_log.txt')), "model": luigi.LocalTarget(osp.join(self.get_output_dir(), 'model'))}
+        return {
+            "success":
+            luigi.LocalTarget(osp.join(self.get_output_dir(),
+                                       'final_log.txt')),
+            "model":
+            luigi.LocalTarget(osp.join(self.get_output_dir(), 'model'))
+        }
