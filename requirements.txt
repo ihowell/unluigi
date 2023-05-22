@@ -6,7 +6,7 @@ lockfile==0.12.2
 luigi==2.8.9
 python-daemon==2.1.2
 python-dateutil==2.8.0
-requests==2.22.0
+requests==2.31.0
 requests-unixsocket==0.2.0
 six==1.12.0
 tornado==4.5.3
